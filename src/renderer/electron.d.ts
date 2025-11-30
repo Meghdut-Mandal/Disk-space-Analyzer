@@ -2,7 +2,7 @@ import { DirectoryNode } from './types'
 
 export interface ElectronAPI {
   openFolderDialog: () => Promise<string | null>
-  scanDirectory: (path: string, options?: { maxDepth?: number }) => Promise<DirectoryNode>
+  scanDirectory: (path: string, options?: { maxDepth?: number; minSize?: number }) => Promise<DirectoryNode>
   deleteDirectories: (
     paths: string[]
   ) => Promise<{ success: string[]; failed: Array<{ path: string; error: string }> }>

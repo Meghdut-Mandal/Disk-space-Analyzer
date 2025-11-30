@@ -71,20 +71,20 @@ ipcMain.handle('open-folder-dialog', async () => {
 ipcMain.handle('scan-directory', async (_, path: string, options: any = {}) => {
   const startTime = Date.now()
   console.log(`[SCAN] Starting scan of: ${path}`)
-  
+
   if (!existsSync(path)) {
     throw new Error('Directory does not exist')
   }
-  
+
   // Try fast scan on non-Windows platforms
   let result
   const scanStartTime = Date.now()
-  
+
   if (process.platform !== 'win32') {
     try {
       console.log('[SCAN] Attempting fast scan (du command)...')
       const { scanDirectoryFast } = await import('./utils/fastScanner')
-      result = await scanDirectoryFast(path)
+      result = await scanDirectoryFast(path, options)
       console.log(`[SCAN] Fast scan completed in ${Date.now() - scanStartTime}ms`)
     } catch (error) {
       console.warn('Fast scan failed, falling back to standard scan:', error)

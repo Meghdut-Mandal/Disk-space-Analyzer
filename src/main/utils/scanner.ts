@@ -12,6 +12,7 @@ export interface DirectoryNode {
 
 export interface ScanOptions {
   maxDepth?: number
+  minSize?: number
 }
 
 const CONCURRENCY_LIMIT = 50
