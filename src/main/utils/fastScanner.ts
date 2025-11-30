@@ -3,19 +3,69 @@ import { DirectoryNode, ScanOptions } from './scanner'
 import { platform } from 'os'
 import { createInterface } from 'readline'
 
-function calculateDirectorySizes(node: DirectoryNode): number {
+// Helper to get directory sizes using du
+function getDirectorySizes(rootPath: string): Promise<Map<string, number>> {
+    return new Promise((resolve) => {
+        const sizes = new Map<string, number>()
+        // -k for kilobyte blocks
+        const child = spawn('du', ['-k', rootPath])
+
+        const rl = createInterface({
+            input: child.stdout,
+            crlfDelay: Infinity
+        })
+
+        rl.on('line', (line) => {
+            const parts = line.split('\t')
+            if (parts.length < 2) return
+
+            const sizeKb = parseInt(parts[0], 10)
+            const path = parts[1]
+
+            if (!isNaN(sizeKb)) {
+                // Convert KB to bytes
+                sizes.set(path, sizeKb * 1024)
+            }
+        })
+
+        child.on('close', () => {
+            resolve(sizes)
+        })
+
+        child.on('error', (err) => {
+            console.error('[FAST_SCAN] du command error:', err)
+            resolve(sizes) // Return what we have
+        })
+    })
+}
+
+function calculateDirectorySizes(node: DirectoryNode, dirSizes: Map<string, number>): number {
     if (!node.isDirectory) {
         return node.size
     }
-    let total = 0
+
+    // If we have the real size from du, use it
+    const realSize = dirSizes.get(node.path)
+
+    // We still need to recurse to ensure children are processed if needed,
+    // but we trust du for the directory size.
+    // However, if we don't have du size (e.g. new dir?), fallback to sum.
+
+    let childrenSize = 0
     for (const child of node.children) {
-        total += calculateDirectorySizes(child)
+        childrenSize += calculateDirectorySizes(child, dirSizes)
     }
-    node.size = total
-    return total
+
+    if (realSize !== undefined) {
+        node.size = realSize
+    } else {
+        node.size = childrenSize
+    }
+
+    return node.size
 }
 
-function buildTree(nodes: Map<string, DirectoryNode>, rootPath: string): DirectoryNode {
+function buildTree(nodes: Map<string, DirectoryNode>, dirSizes: Map<string, number>, rootPath: string): DirectoryNode {
     const treeStartTime = Date.now()
     let root: DirectoryNode | null = null
     let processedCount = 0
@@ -58,18 +108,14 @@ function buildTree(nodes: Map<string, DirectoryNode>, rootPath: string): Directo
     }
 
     if (!root && nodes.size > 0) {
-        // If we can't find the exact root node, try to find a node that matches the root path logic
-        // or just return the first node? No, that's risky.
-        // But with find, if we filter, the root might be there.
-        // If find output includes rootPath, it should be fine.
-        // If find output does NOT include rootPath (e.g. filtered out?), then we have a problem.
-        // But we always include directories in find command: -type d
-        // So root directory should be present.
+        // Fallback: try to find the root node if exact match failed (unlikely with find)
+        // But if we have nodes, we must have a root somewhere or the rootPath is slightly different?
+        // Let's just create a synthetic root if needed? No, that's dangerous.
         throw new Error('Could not find root node in find output')
     }
 
     if (root) {
-        calculateDirectorySizes(root)
+        calculateDirectorySizes(root, dirSizes)
     }
 
     return root!
@@ -82,7 +128,10 @@ export async function scanDirectoryFast(rootPath: string, options: ScanOptions =
 
     const { maxDepth, minSize } = options
     const startTime = Date.now()
-    console.log(`[FAST_SCAN] Starting find command for: ${rootPath}`)
+    console.log(`[FAST_SCAN] Starting scan for: ${rootPath}`)
+
+    // Start du command in parallel
+    const duPromise = getDirectorySizes(rootPath)
 
     return new Promise((resolve, reject) => {
         // Construct find command
@@ -99,8 +148,8 @@ export async function scanDirectoryFast(rootPath: string, options: ScanOptions =
             cmd += ` \\( -type d -o \\( -type f -size +${minSize}c \\) \\)`
         }
 
-        // Use stat to get size in bytes and path
-        cmd += ` -print0 | xargs -0 stat -f "%z\t%N"`
+        // Use stat to get size in bytes, path, and file type
+        cmd += ` -print0 | xargs -0 stat -f "%z\t%N\t%HT"`
 
         console.log(`[FAST_SCAN] Command: ${cmd}`)
 
@@ -129,20 +178,23 @@ export async function scanDirectoryFast(rootPath: string, options: ScanOptions =
 
             // Parse line immediately
             const parts = line.split('\t')
-            if (parts.length < 2) return
+            if (parts.length < 3) return
 
             const sizeVal = parseInt(parts[0], 10)
             // stat returns bytes, no need to multiply by 1024
             const size = isNaN(sizeVal) ? 0 : sizeVal
-            const path = parts.slice(1).join('\t')
+            const path = parts[1]
+            const type = parts[2]
             const name = path.split('/').pop() || path
+
+            const isDirectory = type === 'Directory'
 
             nodes.set(path, {
                 name,
                 path,
                 size,
                 children: [],
-                isDirectory: false // Will be updated in buildTree
+                isDirectory: isDirectory // Use the type from find
             })
         })
 
@@ -150,9 +202,9 @@ export async function scanDirectoryFast(rootPath: string, options: ScanOptions =
             stderr += data.toString()
         })
 
-        child.on('close', (code) => {
+        child.on('close', async (code) => {
             const cmdTime = Date.now() - startTime
-            console.log(`[FAST_SCAN] Command completed in ${cmdTime}ms (exit code: ${code})`)
+            console.log(`[FAST_SCAN] Find command completed in ${cmdTime}ms (exit code: ${code})`)
             console.log(`[FAST_SCAN] Processed ${lineCount} lines, created ${nodes.size} nodes`)
 
             if (code !== 0) {
@@ -165,9 +217,14 @@ export async function scanDirectoryFast(rootPath: string, options: ScanOptions =
             }
 
             try {
+                // Wait for du to finish
+                console.log('[FAST_SCAN] Waiting for directory sizes...')
+                const dirSizes = await duPromise
+                console.log(`[FAST_SCAN] Got ${dirSizes.size} directory sizes`)
+
                 const parseStartTime = Date.now()
                 console.log('[FAST_SCAN] Building tree structure...')
-                const root = buildTree(nodes, rootPath)
+                const root = buildTree(nodes, dirSizes, rootPath)
                 console.log(`[FAST_SCAN] Tree building completed in ${Date.now() - parseStartTime}ms`)
                 console.log(`[FAST_SCAN] Total fast scan time: ${Date.now() - startTime}ms`)
                 resolve(root)

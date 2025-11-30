@@ -4,18 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="17ee84e7-d610-412d-9dd9-76a828c6583a" name="Changes" comment="Perfomance fixs x2">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/renderer/App.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/renderer/App.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/renderer/components/Breadcrumbs.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/renderer/components/Breadcrumbs.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/renderer/components/ControlPanel.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/renderer/components/ControlPanel.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/renderer/components/DeleteConfirmation.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/renderer/components/DeleteConfirmation.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/renderer/components/FileActionsPanel.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/renderer/components/FileActionsPanel.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/renderer/components/FolderPicker.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/renderer/components/FolderPicker.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/renderer/components/RecentDirectories.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/renderer/components/RecentDirectories.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/renderer/components/StatsView.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/renderer/components/StatsView.tsx" afterDir="false" />
+    <list default="true" id="17ee84e7-d610-412d-9dd9-76a828c6583a" name="Changes" comment="Added lucid icons">
+      <change beforePath="$PROJECT_DIR$/src/main/utils/fastScanner.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/utils/fastScanner.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -131,7 +121,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1764476902380</updated>
-      <workItem from="1764476903432" duration="23878000" />
+      <workItem from="1764476903432" duration="24604000" />
     </task>
     <task id="LOCAL-00001" summary="first commit">
       <option name="closed" value="true" />
@@ -269,7 +259,15 @@
       <option name="project" value="LOCAL" />
       <updated>1764515417660</updated>
     </task>
-    <option name="localTasksCounter" value="18" />
+    <task id="LOCAL-00018" summary="Added lucid icons">
+      <option name="closed" value="true" />
+      <created>1764516199252</created>
+      <option name="number" value="00018" />
+      <option name="presentableId" value="LOCAL-00018" />
+      <option name="project" value="LOCAL" />
+      <updated>1764516199252</updated>
+    </task>
+    <option name="localTasksCounter" value="19" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -293,7 +291,8 @@
     <MESSAGE value="Fixes to the treemap" />
     <MESSAGE value="Improved the performance" />
     <MESSAGE value="Perfomance fixs x2" />
-    <option name="LAST_COMMIT_MESSAGE" value="Perfomance fixs x2" />
+    <MESSAGE value="Added lucid icons" />
+    <option name="LAST_COMMIT_MESSAGE" value="Added lucid icons" />
   </component>
   <component name="ai.zencoder.plugin.mcp">
     <option name="internalToolsState" value="{&quot;file_search&quot;:true,&quot;list_resources&quot;:true,&quot;fulltext_search&quot;:true,&quot;read_resource&quot;:true}" />
