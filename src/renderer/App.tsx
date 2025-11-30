@@ -71,6 +71,49 @@ function App() {
     }
   }, [])
 
+  const handleRefresh = useCallback(async () => {
+    if (!selectedPath) return
+    
+    setIsLoading(true)
+    try {
+      const data = await window.electronAPI.scanDirectory(selectedPath)
+      setDirectoryData(data)
+      // Reset view path to root
+      setViewPath(selectedPath)
+    } catch (error) {
+      console.error('Error refreshing directory:', error)
+      alert('Failed to refresh directory')
+    } finally {
+      setIsLoading(false)
+    }
+  }, [selectedPath])
+
+  const handleSelectFolderToDelete = useCallback(async () => {
+    const path = await window.electronAPI.openFolderDialog()
+    if (!path) return
+
+    const confirmed = window.confirm(
+      `Are you sure you want to delete the folder?\n\n${path}\n\nThis will move it to trash.`
+    )
+    
+    if (!confirmed) return
+
+    try {
+      const result = await window.electronAPI.deleteDirectories([path])
+      if (result.failed.length > 0) {
+        alert(`Deletion failed:\n${result.failed.map((f) => `${f.path}: ${f.error}`).join('\n')}`)
+      } else {
+        // Refresh directory data if the deleted folder was within the current scan
+        if (selectedPath && path.startsWith(selectedPath)) {
+          await handleRefresh()
+        }
+      }
+    } catch (error) {
+      console.error('Error deleting folder:', error)
+      alert('Failed to delete folder')
+    }
+  }, [selectedPath, handleRefresh])
+
   const toggleMark = useCallback((path: string) => {
     setMarkedPaths((prev) => {
       const next = new Set(prev)
@@ -199,8 +242,29 @@ function App() {
       
       <div className="flex-shrink-0 bg-white border-b border-gray-200 p-4 shadow-sm z-10">
         <div className="flex items-center justify-between mb-4">
-          <FolderPicker onSelect={handleFolderSelect} selectedPath={selectedPath} />
+          <div className="flex items-center gap-2">
+            <FolderPicker onSelect={handleFolderSelect} selectedPath={selectedPath} />
+            {selectedPath && (
+              <button
+                onClick={handleRefresh}
+                disabled={isLoading}
+                className="px-3 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors shadow-sm flex items-center gap-2"
+                title="Refresh current directory"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Refresh
+              </button>
+            )}
+          </div>
           <div className="flex gap-2">
+            <button
+              onClick={handleSelectFolderToDelete}
+              className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors shadow-sm"
+            >
+              Select Folder to Delete
+            </button>
             <button
               onClick={handleExport}
               disabled={markedPaths.size === 0}
