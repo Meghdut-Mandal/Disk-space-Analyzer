@@ -45,7 +45,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     viewPath: null,
     markedPaths: new Set(),
     searchQuery: '',
-    sizeFilter: 0,
+    sizeFilter: 50 * 1024 * 1024,
     maxDepth: 10,
     isLoading: false,
     showDeleteConfirm: false,

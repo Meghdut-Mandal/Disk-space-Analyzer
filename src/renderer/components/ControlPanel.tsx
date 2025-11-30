@@ -3,6 +3,7 @@ import { useAppStore } from '../store/useAppStore'
 const SIZE_THRESHOLDS = [
   { label: 'All', value: 0 },
   { label: '> 10 MB', value: 10 * 1024 * 1024 },
+  { label: '> 50 MB', value: 50 * 1024 * 1024 },
   { label: '> 100 MB', value: 100 * 1024 * 1024 },
   { label: '> 500 MB', value: 500 * 1024 * 1024 },
   { label: '> 1 GB', value: 1024 * 1024 * 1024 },
