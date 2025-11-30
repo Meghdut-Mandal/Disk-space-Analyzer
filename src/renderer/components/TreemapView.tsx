@@ -24,16 +24,30 @@ interface TreemapItemProps {
 // --- Helper Functions ---
 function getColorBySize(size: number, maxSize: number): string {
   // Create a color scale from cool (small) to warm (large)
-  // Using a more intuitive color scheme: green -> yellow -> orange -> red
+  // Using a more intuitive color scheme with better contrast
   const ratio = Math.min(size / maxSize, 1)
   
   // Use HSL for smooth color transitions
-  // Hue: 120 (green) to 0 (red)
-  const hue = 120 - (ratio * 120)
-  // Saturation: 70-90% for vibrant colors
-  const saturation = 70 + (ratio * 20)
-  // Lightness: 50-60% for good visibility
-  const lightness = 50 + (ratio * 10)
+  // Hue: 200 (blue) -> 120 (green) -> 60 (yellow) -> 30 (orange) -> 0 (red)
+  let hue: number
+  if (ratio < 0.25) {
+    // Small files: Blue to Cyan
+    hue = 200 - (ratio / 0.25) * 20 // 200 -> 180
+  } else if (ratio < 0.5) {
+    // Medium-small: Cyan to Green
+    hue = 180 - ((ratio - 0.25) / 0.25) * 60 // 180 -> 120
+  } else if (ratio < 0.75) {
+    // Medium-large: Green to Yellow
+    hue = 120 - ((ratio - 0.5) / 0.25) * 60 // 120 -> 60
+  } else {
+    // Large files: Yellow to Red
+    hue = 60 - ((ratio - 0.75) / 0.25) * 60 // 60 -> 0
+  }
+  
+  // Higher saturation for more vibrant colors
+  const saturation = 75 + (ratio * 15)
+  // Better lightness range for readability
+  const lightness = 45 + (ratio * 15)
   
   return `hsl(${hue}, ${saturation}%, ${lightness}%)`
 }
@@ -59,6 +73,8 @@ const TreemapItem = ({
   const [hovered, setHovered] = useState(false)
   const [tooltipPosition, setTooltipPosition] = useState<'top' | 'bottom' | 'left' | 'right'>('top')
   const itemRef = useRef<HTMLDivElement>(null)
+  const [showName, setShowName] = useState(false)
+  const [showSize, setShowSize] = useState(false)
 
   // Skip rendering very small items
   if (width < 2 || height < 2) return null
@@ -76,6 +92,35 @@ const TreemapItem = ({
     e.preventDefault()
     onToggleMark(path, e)
   }
+
+  // Use ResizeObserver to track actual pixel dimensions and update text visibility
+  useEffect(() => {
+    if (!itemRef.current) return
+
+    const updateVisibility = () => {
+      if (itemRef.current) {
+        const rect = itemRef.current.getBoundingClientRect()
+        const pixelWidth = rect.width
+        const pixelHeight = rect.height
+        
+        // Update text visibility based on actual pixel dimensions
+        // Optimized thresholds for better readability
+        setShowName(pixelWidth > 35 && pixelHeight > 18)
+        setShowSize(pixelWidth > 50 && pixelHeight > 28)
+      }
+    }
+
+    // Initial check
+    updateVisibility()
+
+    // Watch for size changes (zoom, pan, etc)
+    const resizeObserver = new ResizeObserver(updateVisibility)
+    resizeObserver.observe(itemRef.current)
+
+    return () => {
+      resizeObserver.disconnect()
+    }
+  }, [])
 
   // Calculate tooltip position based on item location
   useEffect(() => {
@@ -98,10 +143,6 @@ const TreemapItem = ({
       else setTooltipPosition('right')
     }
   }, [hovered])
-
-  // Calculate if we should show text (more lenient thresholds)
-  const showName = width > 8 && height > 4
-  const showSize = width > 12 && height > 6
 
   const tooltipPositionClasses = {
     top: 'bottom-full left-1/2 -translate-x-1/2 mb-2',
@@ -126,22 +167,24 @@ const TreemapItem = ({
       onMouseLeave={() => setHovered(false)}
     >
       <div
-        className={`w-full h-full rounded-sm border-2 transition-all duration-200 ${
-          isMarked ? 'border-white' : 'border-black/40'
-        } ${hovered ? 'brightness-110 shadow-2xl z-10 border-white/60' : 'brightness-100'}`}
+        className={`w-full h-full rounded-sm transition-all duration-200 ${
+          isMarked ? 'border-[3px] border-red-400 ring-2 ring-red-400/50' : 'border border-black/30'
+        } ${hovered ? 'brightness-110 shadow-2xl z-10 ring-2 ring-white/40 scale-[1.02]' : 'brightness-100 shadow-md'}`}
         style={{
           backgroundColor: color,
-          boxShadow: hovered ? '0 10px 40px rgba(0,0,0,0.5)' : '0 2px 8px rgba(0,0,0,0.3)',
+          boxShadow: hovered 
+            ? '0 20px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.2) inset' 
+            : '0 4px 12px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.1) inset',
         }}
       >
-        <div className="w-full h-full p-1 flex flex-col items-center justify-center text-center overflow-hidden">
+        <div className="w-full h-full p-1.5 flex flex-col items-center justify-center text-center overflow-hidden">
           {showName && (
-            <div className="font-semibold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] text-[11px] line-clamp-2 px-0.5 leading-tight">
+            <div className="font-bold text-white drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)] text-xs line-clamp-2 px-1 leading-tight tracking-wide">
               {name}
             </div>
           )}
           {showSize && (
-            <div className="text-white/95 drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)] text-[9px] mt-0.5 font-mono">
+            <div className="text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)] text-[10px] mt-1 font-mono font-semibold bg-black/20 px-1.5 py-0.5 rounded backdrop-blur-sm">
               {bytes(size)}
             </div>
           )}
@@ -151,12 +194,23 @@ const TreemapItem = ({
       {/* Tooltip on Hover - positioned to not cover the item */}
       {hovered && (
         <div className={`absolute z-50 pointer-events-none ${tooltipPositionClasses[tooltipPosition]}`}>
-          <div className="bg-gray-900/95 text-white text-xs p-3 rounded-lg shadow-2xl backdrop-blur-sm border border-gray-700 min-w-[200px] max-w-[300px] whitespace-normal">
-            <div className="font-bold mb-1 text-sm">{name}</div>
-            <div className="text-gray-300 mb-1 font-mono">{bytes(size)}</div>
-            <div className="text-gray-400 text-[10px] break-all mb-2">{path}</div>
-            {hasChildren && <div className="text-green-400 mt-2 text-[11px]">📁 Click to explore</div>}
-            <div className="text-gray-500 mt-1 text-[10px]">Right-click to mark for deletion</div>
+          <div className="bg-gray-900/98 text-white text-xs p-3.5 rounded-xl shadow-2xl backdrop-blur-md border border-gray-600/50 min-w-[220px] max-w-[320px] whitespace-normal animate-in fade-in duration-200">
+            <div className="font-bold mb-2 text-sm text-white">{name}</div>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-blue-400 font-mono font-semibold">{bytes(size)}</span>
+              <span className="text-gray-500 text-[10px]">•</span>
+              <span className="text-gray-400 text-[10px]">{((size / maxSize) * 100).toFixed(1)}% of current view</span>
+            </div>
+            <div className="text-gray-400 text-[10px] break-all font-mono bg-black/30 px-2 py-1.5 rounded mb-2">{path}</div>
+            {hasChildren && (
+              <div className="flex items-center gap-1.5 text-emerald-400 mt-2.5 text-[11px] bg-emerald-500/10 px-2 py-1 rounded">
+                <span>📁</span>
+                <span className="font-medium">Click to explore directory</span>
+              </div>
+            )}
+            <div className="text-gray-500 mt-2 text-[10px] border-t border-gray-700/50 pt-2">
+              Right-click to mark for deletion
+            </div>
           </div>
         </div>
       )}
@@ -194,8 +248,8 @@ const TreemapContainer = ({
 
     const treemap = d3.treemap<DirectoryNode>()
       .size([100, 100])
-      .paddingInner(0.2) // Add padding between items for better separation
-      .paddingOuter(0.5)
+      .paddingInner(0.15) // Reduced padding for better space utilization
+      .paddingOuter(0.3)  // Reduced outer padding
       .round(false)
 
     treemap(hierarchy)
@@ -263,29 +317,30 @@ const TreemapContainer = ({
   return (
     <div className="relative w-full h-full overflow-hidden">
       {/* Zoom Controls */}
-      <div className="absolute top-4 left-4 z-50 flex flex-col gap-2 bg-black/40 p-2 rounded-lg backdrop-blur-sm border border-white/10">
+      <div className="absolute top-3 left-3 z-50 flex flex-col gap-1.5 bg-gray-900/90 p-2 rounded-xl backdrop-blur-md border border-gray-700/50 shadow-2xl">
         <button
           onClick={() => setZoom(Math.min(zoom + 0.2, 5))}
-          className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded text-sm font-semibold transition-colors"
-          title="Zoom In"
+          className="w-9 h-9 bg-gradient-to-br from-blue-500/20 to-blue-600/20 hover:from-blue-500/30 hover:to-blue-600/30 text-white rounded-lg text-base font-bold transition-all hover:scale-105 active:scale-95 border border-blue-500/30"
+          title="Zoom In (Scroll Up)"
         >
           +
         </button>
         <button
           onClick={() => setZoom(Math.max(zoom - 0.2, 0.5))}
-          className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded text-sm font-semibold transition-colors"
-          title="Zoom Out"
+          className="w-9 h-9 bg-gradient-to-br from-purple-500/20 to-purple-600/20 hover:from-purple-500/30 hover:to-purple-600/30 text-white rounded-lg text-base font-bold transition-all hover:scale-105 active:scale-95 border border-purple-500/30"
+          title="Zoom Out (Scroll Down)"
         >
           −
         </button>
+        <div className="h-px bg-gray-700/50 my-0.5"></div>
         <button
           onClick={handleReset}
-          className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded text-[10px] font-semibold transition-colors"
+          className="w-9 h-9 bg-gradient-to-br from-gray-500/20 to-gray-600/20 hover:from-gray-500/30 hover:to-gray-600/30 text-white rounded-lg text-sm font-bold transition-all hover:scale-105 active:scale-95 border border-gray-500/30"
           title="Reset View"
         >
           ⟲
         </button>
-        <div className="text-white/70 text-[10px] text-center mt-1 font-mono">
+        <div className="text-white/80 text-[11px] text-center mt-0.5 font-mono font-semibold bg-black/30 px-1.5 py-1 rounded">
           {Math.round(zoom * 100)}%
         </div>
       </div>
@@ -300,7 +355,7 @@ const TreemapContainer = ({
         onMouseLeave={handleMouseLeave}
       >
         <div
-          className="absolute inset-0 p-4 pt-16 pr-48 pb-24 pl-28"
+          className="absolute inset-0 p-6"
           style={{
             transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
             transformOrigin: 'center center',
@@ -339,11 +394,20 @@ const TreemapContainer = ({
       </div>
 
       {/* Instructions */}
-      <div className="absolute bottom-4 left-4 text-white/60 text-xs pointer-events-none bg-black/30 px-3 py-2 rounded-lg backdrop-blur-sm">
-        <div className="flex flex-col gap-1">
-          <div>🖱️ Drag to pan</div>
-          <div>🔍 Scroll to zoom</div>
-          <div>👆 Click to explore</div>
+      <div className="absolute bottom-3 left-3 text-white/70 text-xs pointer-events-none bg-gray-900/90 px-3.5 py-2.5 rounded-xl backdrop-blur-md border border-gray-700/50 shadow-2xl">
+        <div className="flex flex-col gap-1.5">
+          <div className="flex items-center gap-2">
+            <span className="text-blue-400">🖱️</span>
+            <span className="font-medium">Drag to pan</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-purple-400">🔍</span>
+            <span className="font-medium">Scroll to zoom</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-emerald-400">👆</span>
+            <span className="font-medium">Click to explore</span>
+          </div>
         </div>
       </div>
     </div>
@@ -426,7 +490,7 @@ export default function TreemapView() {
   }
 
   return (
-    <div className="w-full h-full bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 relative overflow-hidden">
+    <div className="w-full h-full bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 relative overflow-hidden">
       <TreemapContainer
         data={filteredData}
         markedPaths={markedPaths}
@@ -434,19 +498,20 @@ export default function TreemapView() {
         onDrillDown={setViewPath}
         onSelectFile={setSelectedFile}
       />
-      <div className="absolute top-4 right-4 text-white/80 text-xs pointer-events-none bg-black/40 px-3 py-2 rounded-lg backdrop-blur-sm border border-white/10">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded-sm" style={{ background: 'hsl(120, 70%, 50%)' }}></div>
-            <span>Small</span>
+      {/* Color Legend - Improved positioning and design */}
+      <div className="absolute top-3 right-3 text-white/90 text-xs pointer-events-none bg-gray-900/90 px-4 py-2.5 rounded-xl backdrop-blur-md border border-gray-700/50 shadow-2xl">
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 rounded" style={{ background: 'hsl(190, 75%, 45%)' }}></div>
+            <span className="font-medium">Small</span>
           </div>
-          <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded-sm" style={{ background: 'hsl(60, 80%, 55%)' }}></div>
-            <span>Medium</span>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 rounded" style={{ background: 'hsl(90, 82%, 52%)' }}></div>
+            <span className="font-medium">Medium</span>
           </div>
-          <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded-sm" style={{ background: 'hsl(0, 90%, 60%)' }}></div>
-            <span>Large</span>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 rounded" style={{ background: 'hsl(15, 87%, 55%)' }}></div>
+            <span className="font-medium">Large</span>
           </div>
         </div>
       </div>
