@@ -14,25 +14,61 @@ export interface ScanOptions {
   maxDepth?: number
 }
 
+const CONCURRENCY_LIMIT = 50
+
+class ConcurrencyLimiter {
+  private active = 0
+  private queue: (() => void)[] = []
+
+  constructor(private limit: number) { }
+
+  async run<T>(fn: () => Promise<T>): Promise<T> {
+    if (this.active >= this.limit) {
+      await new Promise<void>(resolve => this.queue.push(resolve))
+    }
+    this.active++
+    try {
+      return await fn()
+    } finally {
+      this.active--
+      if (this.queue.length > 0) {
+        const next = this.queue.shift()
+        next?.()
+      }
+    }
+  }
+}
+
+const limiter = new ConcurrencyLimiter(CONCURRENCY_LIMIT)
+
 // Helper to calculate size of a directory recursively without building the tree
 async function getDirSize(path: string): Promise<number> {
   let total = 0
   try {
-    const stats = await lstat(path)
-    if (stats.isSymbolicLink()) return 0
-    if (!stats.isDirectory()) {
-      return stats.isFile() ? stats.size : 0
-    }
+    // Use withFileTypes to avoid separate lstat calls
+    const entries = await limiter.run(() => readdir(path, { withFileTypes: true }))
 
-    const entries = await readdir(path)
-    for (const entry of entries) {
-      const entryPath = join(path, entry)
-      try {
-        total += await getDirSize(entryPath)
-      } catch (error) {
-        // Ignore errors for individual files
+    const promises = entries.map(async (entry) => {
+      const entryPath = join(path, entry.name)
+      if (entry.isSymbolicLink()) return 0
+
+      if (entry.isDirectory()) {
+        return await getDirSize(entryPath)
+      } else if (entry.isFile()) {
+        // We still need lstat for size, but only for files
+        try {
+          const stats = await limiter.run(() => lstat(entryPath))
+          return stats.size
+        } catch {
+          return 0
+        }
       }
-    }
+      return 0
+    })
+
+    const sizes = await Promise.all(promises)
+    total = sizes.reduce((acc, size) => acc + size, 0)
+
   } catch (error) {
     // Ignore errors
   }
@@ -55,11 +91,18 @@ export async function scanDirectory(rootPath: string, options: ScanOptions = {})
   }
 
   async function scanRecursive(path: string, name: string, depth: number): Promise<DirectoryNode> {
-    // Use lstat to not follow symlinks
-    const stats = await lstat(path)
+    // Initial check for root path
+    let isDir = false
+    let isSymLink = false
+    let size = 0
 
-    if (stats.isSymbolicLink()) {
-      // If the root itself is a symlink, treat it as a file (or 0 size node)
+    try {
+      const stats = await limiter.run(() => lstat(path))
+      isDir = stats.isDirectory()
+      isSymLink = stats.isSymbolicLink()
+      size = stats.isFile() ? stats.size : 0
+    } catch (e) {
+      // If we can't stat the root/current path, return empty node
       return {
         name,
         path,
@@ -69,11 +112,21 @@ export async function scanDirectory(rootPath: string, options: ScanOptions = {})
       }
     }
 
-    if (!stats.isDirectory()) {
+    if (isSymLink) {
       return {
         name,
         path,
-        size: stats.isFile() ? stats.size : 0,
+        size: 0,
+        children: [],
+        isDirectory: false,
+      }
+    }
+
+    if (!isDir) {
+      return {
+        name,
+        path,
+        size,
         children: [],
         isDirectory: false,
       }
@@ -82,12 +135,11 @@ export async function scanDirectory(rootPath: string, options: ScanOptions = {})
     // Check if this directory is ignored relative to root
     const relativePath = relative(rootPath, path)
     if (relativePath && ig.ignores(relativePath)) {
-      // If ignored, just calculate size without recursion into children for the tree
-      const size = await getDirSize(path)
+      const dirSize = await getDirSize(path)
       return {
         name,
         path,
-        size,
+        size: dirSize,
         children: [],
         isDirectory: true,
       }
@@ -98,76 +150,70 @@ export async function scanDirectory(rootPath: string, options: ScanOptions = {})
 
     // Prevent excessive recursion depth
     if (depth >= maxDepth) {
-      // If max depth reached, calculate size but don't show children
-      const size = await getDirSize(path)
+      const dirSize = await getDirSize(path)
       return {
         name,
         path,
-        size,
+        size: dirSize,
         children: [],
         isDirectory: true,
       }
     }
 
     try {
-      // Check for local .gitignore in this directory (optional, but good for nested repos)
-      // For simplicity, we'll stick to root .gitignore for now as per common behavior, 
-      // or we could add to a local ignore instance. 
-      // Given the requirement "scaning folder which has a gitgnore file", 
-      // it implies the root of the scan might have it.
-      // If we encounter a nested .gitignore, we should probably respect it too, 
-      // but that complicates the `ig` instance scoping. 
-      // Let's stick to the root .gitignore for the main scan context, 
-      // or check if the current directory has one and create a new scope?
-      // For now, let's just use the root one.
+      const entries = await limiter.run(() => readdir(path, { withFileTypes: true }))
 
-      const entries = await readdir(path)
-
-      for (const entry of entries) {
-        const entryPath = join(path, entry)
-
-        // Check if file/dir is ignored
+      const promises = entries.map(async (entry) => {
+        const entryPath = join(path, entry.name)
         const entryRelativePath = relative(rootPath, entryPath)
-        if (entryRelativePath && ig.ignores(entryRelativePath)) {
-          // If it's a directory, we might want to show it as a block but not recurse?
-          // The user said: "get the size of the ignored folder no need to go recursively into the ignored folders."
-          // So we should include it in the tree as a leaf node with its size.
-          try {
-            const entryStats = await lstat(entryPath)
-            if (entryStats.isSymbolicLink()) continue
 
-            if (entryStats.isDirectory()) {
-              const size = await getDirSize(entryPath)
-              children.push({
-                name: entry,
-                path: entryPath,
-                size,
-                children: [],
-                isDirectory: true
-              })
-              totalSize += size
-            } else {
-              // Ignored file, maybe skip? or include? 
-              // Usually ignored files are not interesting. 
-              // But if we want "size of ignored folder", we probably mean the folder itself.
-              // If it's a file, let's skip it to reduce noise.
-            }
-          } catch (e) { }
-          continue
+        // Check ignore
+        if (entryRelativePath && ig.ignores(entryRelativePath)) {
+          if (entry.isSymbolicLink()) return null
+
+          if (entry.isDirectory()) {
+            const size = await getDirSize(entryPath)
+            return {
+              name: entry.name,
+              path: entryPath,
+              size,
+              children: [],
+              isDirectory: true
+            } as DirectoryNode
+          }
+          return null
         }
 
-        try {
-          // Check for symlinks before recursing
-          const entryStats = await lstat(entryPath)
-          if (entryStats.isSymbolicLink()) continue
+        if (entry.isSymbolicLink()) return null
 
-          const child = await scanRecursive(entryPath, entry, depth + 1)
-          children.push(child)
-          totalSize += child.size
-        } catch (error) {
-          console.error(`Error scanning ${entryPath}:`, error)
+        if (entry.isDirectory()) {
+          return await scanRecursive(entryPath, entry.name, depth + 1)
+        } else {
+          // It's a file
+          try {
+            const stats = await limiter.run(() => lstat(entryPath))
+            return {
+              name: entry.name,
+              path: entryPath,
+              size: stats.size,
+              children: [],
+              isDirectory: false
+            } as DirectoryNode
+          } catch {
+            return null
+          }
+        }
+      })
+
+      const results = await Promise.all(promises)
+
+      for (const result of results) {
+        if (result) {
+          children.push(result)
+          totalSize += result.size
         }
       }
+
     } catch (error) {
       console.error(`Error reading directory ${path}:`, error)
     }

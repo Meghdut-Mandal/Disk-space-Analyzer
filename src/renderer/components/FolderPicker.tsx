@@ -1,13 +1,19 @@
-interface FolderPickerProps {
-  onSelect: () => void
-  selectedPath: string | null
-}
+import { useAppStore } from '../store/useAppStore'
 
-export default function FolderPicker({ onSelect, selectedPath }: FolderPickerProps) {
+export default function FolderPicker() {
+  const { selectedPath, scanDirectory } = useAppStore()
+
+  const handleSelect = async () => {
+    const path = await window.electronAPI.openFolderDialog()
+    if (path) {
+      scanDirectory(path)
+    }
+  }
+
   return (
     <div className="flex items-center gap-4">
       <button
-        onClick={onSelect}
+        onClick={handleSelect}
         className="px-6 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-colors"
       >
         Select Folder

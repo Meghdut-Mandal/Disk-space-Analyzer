@@ -1,16 +1,15 @@
 import React from 'react'
+import { useAppStore } from '../store/useAppStore'
 
-interface BreadcrumbsProps {
-    path: string
-    onNavigate: (path: string) => void
-    rootPath: string
-}
+export default function Breadcrumbs() {
+    const { viewPath, setViewPath, selectedPath } = useAppStore()
 
-export default function Breadcrumbs({ path, onNavigate, rootPath }: BreadcrumbsProps) {
+    if (!viewPath || !selectedPath) return null
+
     // Normalize paths to handle different separators
     const normalize = (p: string) => p.replace(/\\/g, '/')
-    const normalizedPath = normalize(path)
-    const normalizedRoot = normalize(rootPath)
+    const normalizedPath = normalize(viewPath)
+    const normalizedRoot = normalize(selectedPath)
 
     if (!normalizedPath.startsWith(normalizedRoot)) {
         return null
@@ -20,14 +19,14 @@ export default function Breadcrumbs({ path, onNavigate, rootPath }: BreadcrumbsP
     const parts = relativePath.split('/').filter(Boolean)
 
     // Determine the path separator from the original path
-    const separator = path.includes('\\') ? '\\' : '/'
+    const separator = viewPath.includes('\\') ? '\\' : '/'
 
     const items = [
-        { name: rootPath.split(/[/\\]/).pop() || rootPath, path: rootPath },
+        { name: selectedPath.split(/[/\\]/).pop() || selectedPath, path: selectedPath },
         ...parts.map((part, index) => {
             // Reconstruct path using original separator
             const pathParts = parts.slice(0, index + 1)
-            const currentPath = rootPath + separator + pathParts.join(separator)
+            const currentPath = selectedPath + separator + pathParts.join(separator)
             return { name: part, path: currentPath }
         }),
     ]
@@ -38,7 +37,7 @@ export default function Breadcrumbs({ path, onNavigate, rootPath }: BreadcrumbsP
                 <React.Fragment key={item.path}>
                     {index > 0 && <span className="mx-2 text-gray-400">/</span>}
                     <button
-                        onClick={() => onNavigate(item.path)}
+                        onClick={() => setViewPath(item.path)}
                         className={`hover:text-blue-600 hover:underline ${index === items.length - 1 ? 'font-semibold text-gray-900 pointer-events-none' : ''
                             }`}
                     >

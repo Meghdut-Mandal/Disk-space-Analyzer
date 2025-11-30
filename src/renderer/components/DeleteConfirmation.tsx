@@ -1,21 +1,25 @@
+import { useMemo } from 'react'
 import bytes from 'bytes'
+import { useAppStore } from '../store/useAppStore'
+import { DirectoryNode } from '../types'
 
-interface MarkedDirectory {
-  path: string
-  size: number
-}
+export default function DeleteConfirmation() {
+  const { markedPaths, directoryData, deleteMarked, setShowDeleteConfirm } = useAppStore()
 
-interface DeleteConfirmationProps {
-  markedDirectories: MarkedDirectory[]
-  onConfirm: () => void
-  onCancel: () => void
-}
+  const markedDirectories = useMemo(() => {
+    if (!directoryData) return []
 
-export default function DeleteConfirmation({
-  markedDirectories,
-  onConfirm,
-  onCancel,
-}: DeleteConfirmationProps) {
+    const result: Array<{ path: string; size: number }> = []
+    const collect = (node: DirectoryNode): void => {
+      if (markedPaths.has(node.path)) {
+        result.push({ path: node.path, size: node.size })
+      }
+      node.children.forEach(collect)
+    }
+    collect(directoryData)
+    return result
+  }, [directoryData, markedPaths])
+
   const totalSize = markedDirectories.reduce((sum, dir) => sum + dir.size, 0)
 
   return (
@@ -44,13 +48,13 @@ export default function DeleteConfirmation({
         </div>
         <div className="p-6 border-t border-gray-200 flex justify-end gap-3">
           <button
-            onClick={onCancel}
+            onClick={() => setShowDeleteConfirm(false)}
             className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
           >
             Cancel
           </button>
           <button
-            onClick={onConfirm}
+            onClick={deleteMarked}
             className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
           >
             Delete All

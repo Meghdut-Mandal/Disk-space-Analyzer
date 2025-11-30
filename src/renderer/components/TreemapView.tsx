@@ -2,15 +2,7 @@ import { useMemo } from 'react'
 import { Treemap, Tooltip, ResponsiveContainer } from 'recharts'
 import { DirectoryNode, TreemapData } from '../types'
 import bytes from 'bytes'
-
-interface TreemapViewProps {
-  data: DirectoryNode
-  markedPaths: Set<string>
-  onToggleMark: (path: string) => void
-  onDrillDown: (path: string) => void
-  searchQuery: string
-  sizeFilter: number
-}
+import { useAppStore } from '../store/useAppStore'
 
 function convertToTreemapData(
   node: DirectoryNode,
@@ -78,29 +70,6 @@ const CustomContent = (props: any) => {
   // Get data properties - they might be on props directly or in payload
   const dataItem = props.payload || props
   const { name, path, size, fill, children } = dataItem
-
-  // Debug logging - log all props keys to understand structure
-  // Log first few calls to understand the data structure
-  if (!window._treemapDebugCount) {
-    window._treemapDebugCount = 0
-  }
-  if (window._treemapDebugCount < 5) {
-    window._treemapDebugCount++
-    console.log(`CustomContent call #${window._treemapDebugCount} - all props keys:`, Object.keys(props))
-    console.log(`CustomContent call #${window._treemapDebugCount} - props:`, {
-      depth,
-      x, y, width, height,
-      name: dataItem.name,
-      size: dataItem.size,
-      path: dataItem.path,
-      fill: dataItem.fill,
-      hasChildren: !!dataItem.children,
-      childrenCount: dataItem.children?.length,
-      hasPayload: !!props.payload,
-      payloadKeys: props.payload ? Object.keys(props.payload) : [],
-      allProps: props
-    })
-  }
 
   // Skip root container node (depth 0) - it doesn't have data properties
   // Also skip if we don't have the required data properties
@@ -199,28 +168,42 @@ const CustomTooltip = ({ active, payload }: any) => {
   return null
 }
 
-export default function TreemapView({
-  data,
-  markedPaths,
-  onToggleMark,
-  onDrillDown,
-  searchQuery,
-  sizeFilter,
-}: TreemapViewProps) {
-  const treemapData = useMemo(() => {
-    console.log('TreemapView converting data:', data)
-    console.log('Search query:', searchQuery, 'Size filter:', sizeFilter)
-    const converted = convertToTreemapData(data, markedPaths, searchQuery, sizeFilter)
-    console.log('Converted data:', converted)
-    if (!converted) {
-      console.log('Converted is null, returning null')
+export default function TreemapView() {
+  const {
+    directoryData,
+    viewPath,
+    markedPaths,
+    toggleMark,
+    setViewPath,
+    searchQuery,
+    sizeFilter
+  } = useAppStore()
+
+  // Find the node corresponding to the current viewPath
+  const currentViewNode = useMemo(() => {
+    if (!directoryData || !viewPath) return null
+
+    // Helper to find node by path
+    const findNode = (node: DirectoryNode, targetPath: string): DirectoryNode | null => {
+      // Normalize paths for comparison
+      const normalize = (p: string) => p.replace(/\\/g, '/').replace(/\/+$/, '') // Remove trailing slashes
+      if (normalize(node.path) === normalize(targetPath)) return node
+
+      for (const child of node.children) {
+        const found = findNode(child, targetPath)
+        if (found) return found
+      }
       return null
     }
-    console.log('Returning converted data with children:', converted.children?.length)
-    return converted
-  }, [data, markedPaths, searchQuery, sizeFilter])
 
-  console.log('Rendering TreemapView with treemapData:', treemapData)
+    return findNode(directoryData, viewPath)
+  }, [directoryData, viewPath])
+
+  const treemapData = useMemo(() => {
+    if (!currentViewNode) return null
+    const converted = convertToTreemapData(currentViewNode, markedPaths, searchQuery, sizeFilter)
+    return converted
+  }, [currentViewNode, markedPaths, searchQuery, sizeFilter])
 
   if (!treemapData) {
     return (
@@ -244,24 +227,15 @@ export default function TreemapView({
     ? flattenChildren(treemapData.children)
     : [treemapData]
 
-  console.log('Treemap items (flattened):', treemapItems.length)
-  console.log('First item:', treemapItems[0] ? {
-    name: treemapItems[0].name,
-    size: treemapItems[0].size,
-    hasChildren: !!treemapItems[0].children
-  } : 'no items')
-
   // Create a wrapper component that captures the props from TreemapView scope
-  const CustomContentWrapper = useMemo(() => {
-    return (props: any) => {
-      return CustomContent({
-        ...props,
-        markedPaths,
-        onToggleMark,
-        onDrillDown,
-      })
-    }
-  }, [markedPaths, onToggleMark, onDrillDown])
+  const CustomContentWrapper = (props: any) => {
+    return CustomContent({
+      ...props,
+      markedPaths,
+      onToggleMark: toggleMark,
+      onDrillDown: setViewPath,
+    })
+  }
 
   return (
     <div className="w-full h-full">

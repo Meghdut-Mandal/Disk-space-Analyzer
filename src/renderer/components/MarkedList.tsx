@@ -1,16 +1,25 @@
+import { useMemo } from 'react'
 import bytes from 'bytes'
+import { useAppStore } from '../store/useAppStore'
+import { DirectoryNode } from '../types'
 
-interface MarkedDirectory {
-  path: string
-  size: number
-}
+export default function MarkedList() {
+  const { markedPaths, toggleMark, directoryData } = useAppStore()
 
-interface MarkedListProps {
-  markedDirectories: MarkedDirectory[]
-  onRemove: (path: string) => void
-}
+  const markedDirectories = useMemo(() => {
+    if (!directoryData) return []
 
-export default function MarkedList({ markedDirectories, onRemove }: MarkedListProps) {
+    const result: Array<{ path: string; size: number }> = []
+    const collect = (node: DirectoryNode): void => {
+      if (markedPaths.has(node.path)) {
+        result.push({ path: node.path, size: node.size })
+      }
+      node.children.forEach(collect)
+    }
+    collect(directoryData)
+    return result
+  }, [directoryData, markedPaths])
+
   const totalSize = markedDirectories.reduce((sum, dir) => sum + dir.size, 0)
 
   return (
@@ -42,7 +51,7 @@ export default function MarkedList({ markedDirectories, onRemove }: MarkedListPr
                     <div className="text-xs text-gray-500 mt-1">{bytes(dir.size)}</div>
                   </div>
                   <button
-                    onClick={() => onRemove(dir.path)}
+                    onClick={() => toggleMark(dir.path)}
                     className="flex-shrink-0 text-red-600 hover:text-red-800 text-sm font-medium"
                   >
                     ✕

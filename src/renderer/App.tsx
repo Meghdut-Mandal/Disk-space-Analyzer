@@ -1,22 +1,25 @@
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useEffect, useState } from 'react'
 import FolderPicker from './components/FolderPicker'
 import TreemapView from './components/TreemapView'
 import ControlPanel from './components/ControlPanel'
 import MarkedList from './components/MarkedList'
 import DeleteConfirmation from './components/DeleteConfirmation'
 import Breadcrumbs from './components/Breadcrumbs'
-import { DirectoryNode } from './types'
+import { useAppStore } from './store/useAppStore'
 
 function App() {
-  const [directoryData, setDirectoryData] = useState<DirectoryNode | null>(null)
-  const [selectedPath, setSelectedPath] = useState<string | null>(null)
-  const [viewPath, setViewPath] = useState<string | null>(null)
-  const [markedPaths, setMarkedPaths] = useState<Set<string>>(new Set())
-  const [searchQuery, setSearchQuery] = useState('')
-  const [sizeFilter, setSizeFilter] = useState(0)
-  const [maxDepth, setMaxDepth] = useState(10)
-  const [isLoading, setIsLoading] = useState(false)
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const {
+    directoryData,
+    selectedPath,
+    viewPath,
+    markedPaths,
+    isLoading,
+    showDeleteConfirm,
+    setMarkedPaths,
+    scanDirectory,
+    setShowDeleteConfirm,
+    exportMarked
+  } = useAppStore()
 
   // Load marked paths from storage on mount
   useEffect(() => {
@@ -29,7 +32,7 @@ function App() {
       }
     }
     loadMarkedPaths()
-  }, [])
+  }, [setMarkedPaths])
 
   // Save marked paths to storage whenever they change (but not on initial mount)
   const [isInitialLoad, setIsInitialLoad] = useState(true)
@@ -50,155 +53,11 @@ function App() {
     saveMarkedPaths()
   }, [markedPaths, isInitialLoad])
 
-  const handleFolderSelect = useCallback(async () => {
-    const path = await window.electronAPI.openFolderDialog()
-    if (path) {
-      console.log('Selected path:', path)
-      setSelectedPath(path)
-      setViewPath(path)
-      setIsLoading(true)
-      try {
-        const data = await window.electronAPI.scanDirectory(path, { maxDepth })
-        console.log('Scanned data:', data)
-        console.log('Data path:', data.path)
-        console.log('Data children count:', data.children.length)
-        setDirectoryData(data)
-      } catch (error) {
-        console.error('Error scanning directory:', error)
-        alert('Failed to scan directory')
-      } finally {
-        setIsLoading(false)
-      }
+  const handleRefresh = async () => {
+    if (selectedPath) {
+      await scanDirectory(selectedPath)
     }
-  }, [])
-
-  const handleRefresh = useCallback(async () => {
-    if (!selectedPath) return
-
-    setIsLoading(true)
-    try {
-      const data = await window.electronAPI.scanDirectory(selectedPath, { maxDepth })
-      setDirectoryData(data)
-      // Reset view path to root
-      setViewPath(selectedPath)
-    } catch (error) {
-      console.error('Error refreshing directory:', error)
-      alert('Failed to refresh directory')
-    } finally {
-      setIsLoading(false)
-    }
-  }, [selectedPath])
-
-  const toggleMark = useCallback((path: string) => {
-    setMarkedPaths((prev) => {
-      const next = new Set(prev)
-      if (next.has(path)) {
-        next.delete(path)
-      } else {
-        next.add(path)
-      }
-      return next
-    })
-  }, [])
-
-  const getMarkedDirectories = useCallback((): Array<{ path: string; size: number }> => {
-    if (!directoryData) return []
-
-    const result: Array<{ path: string; size: number }> = []
-    const collect = (node: DirectoryNode): void => {
-      if (markedPaths.has(node.path)) {
-        result.push({ path: node.path, size: node.size })
-      }
-      node.children.forEach(collect)
-    }
-    collect(directoryData)
-    return result
-  }, [directoryData, markedPaths])
-
-  const handleDelete = useCallback(async () => {
-    const paths = Array.from(markedPaths)
-    if (paths.length === 0) return
-
-    try {
-      const result = await window.electronAPI.deleteDirectories(paths)
-      if (result.failed.length > 0) {
-        alert(`Some deletions failed:\n${result.failed.map((f) => `${f.path}: ${f.error}`).join('\n')}`)
-      }
-      setMarkedPaths(new Set())
-      // Refresh directory data
-      if (selectedPath) {
-        setIsLoading(true)
-        try {
-          const data = await window.electronAPI.scanDirectory(selectedPath, { maxDepth })
-          setDirectoryData(data)
-          // Reset view path to root if current view was deleted
-          setViewPath(selectedPath)
-        } finally {
-          setIsLoading(false)
-        }
-      }
-    } catch (error) {
-      console.error('Error deleting directories:', error)
-      alert('Failed to delete directories')
-    }
-    setShowDeleteConfirm(false)
-  }, [markedPaths, selectedPath])
-
-  const handleExport = useCallback(async () => {
-    if (markedPaths.size === 0) {
-      alert('No directories marked for export')
-      return
-    }
-
-    if (!directoryData) return
-
-    const markedData = getMarkedDirectories()
-
-    try {
-      const result = await window.electronAPI.exportMarkedList(markedData, 'json')
-      if (result === null) {
-        // User cancelled the export dialog
-        return
-      }
-    } catch (error) {
-      console.error('Error exporting:', error)
-      alert('Failed to export list')
-    }
-  }, [markedPaths, directoryData, getMarkedDirectories])
-
-  // Find the node corresponding to the current viewPath
-  const currentViewNode = useMemo(() => {
-    if (!directoryData || !viewPath) return null
-
-    // Helper to find node by path
-    const findNode = (node: DirectoryNode, targetPath: string): DirectoryNode | null => {
-      // Normalize paths for comparison
-      const normalize = (p: string) => p.replace(/\\/g, '/').replace(/\/+$/, '') // Remove trailing slashes
-      if (normalize(node.path) === normalize(targetPath)) return node
-
-      for (const child of node.children) {
-        const found = findNode(child, targetPath)
-        if (found) return found
-      }
-      return null
-    }
-
-    const result = findNode(directoryData, viewPath)
-
-    // Debug logging
-    console.log('Finding node for viewPath:', viewPath)
-    console.log('directoryData path:', directoryData.path)
-    console.log('Result found:', !!result)
-    if (result) {
-      console.log('Result:', result)
-    } else {
-      console.log('Could not find node!')
-      console.log('Normalized viewPath:', viewPath.replace(/\\/g, '/').replace(/\/+$/, ''))
-      console.log('Normalized directoryData path:', directoryData.path.replace(/\\/g, '/').replace(/\/+$/, ''))
-    }
-
-    return result
-  }, [directoryData, viewPath])
+  }
 
   return (
     <div className="flex flex-col h-screen bg-gray-50 font-sans text-gray-900">
@@ -218,7 +77,7 @@ function App() {
       <div className="flex-shrink-0 bg-white border-b border-gray-200 p-4 shadow-sm z-10">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <FolderPicker onSelect={handleFolderSelect} selectedPath={selectedPath} />
+            <FolderPicker />
             {selectedPath && (
               <button
                 onClick={handleRefresh}
@@ -236,7 +95,7 @@ function App() {
           <div className="flex gap-2">
 
             <button
-              onClick={handleExport}
+              onClick={exportMarked}
               disabled={markedPaths.size === 0}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors shadow-sm"
             >
@@ -251,17 +110,10 @@ function App() {
             </button>
           </div>
         </div>
-        <ControlPanel
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          sizeFilter={sizeFilter}
-          onSizeFilterChange={setSizeFilter}
-          maxDepth={maxDepth}
-          onMaxDepthChange={setMaxDepth}
-        />
+        <ControlPanel />
         {selectedPath && viewPath && (
           <div className="mt-2">
-            <Breadcrumbs path={viewPath} rootPath={selectedPath} onNavigate={setViewPath} />
+            <Breadcrumbs />
           </div>
         )}
       </div>
@@ -272,16 +124,9 @@ function App() {
             <div className="flex items-center justify-center flex-1">
               <div className="text-gray-500 animate-pulse">Scanning directory...</div>
             </div>
-          ) : currentViewNode ? (
+          ) : directoryData ? (
             <div className="flex-1 min-h-0">
-              <TreemapView
-                data={currentViewNode}
-                markedPaths={markedPaths}
-                onToggleMark={toggleMark}
-                onDrillDown={setViewPath}
-                searchQuery={searchQuery}
-                sizeFilter={sizeFilter}
-              />
+              <TreemapView />
             </div>
           ) : (
             <div className="flex items-center justify-center flex-1 text-gray-400">
@@ -291,16 +136,12 @@ function App() {
         </div>
 
         <div className="w-80 bg-white border-l border-gray-200 overflow-auto shadow-lg z-20">
-          <MarkedList markedDirectories={getMarkedDirectories()} onRemove={toggleMark} />
+          <MarkedList />
         </div>
       </div>
 
       {showDeleteConfirm && (
-        <DeleteConfirmation
-          markedDirectories={getMarkedDirectories()}
-          onConfirm={handleDelete}
-          onCancel={() => setShowDeleteConfirm(false)}
-        />
+        <DeleteConfirmation />
       )}
     </div>
   )
