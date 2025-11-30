@@ -80,18 +80,32 @@ export const useAppStore = create<AppState>((set, get) => ({
 
     // Async Actions
     scanDirectory: async (path) => {
+        const startTime = Date.now()
+        console.log(`[FRONTEND] Starting scan request for: ${path}`)
+        
         const { maxDepth } = get()
         set({ isLoading: true })
         try {
+            const ipcStartTime = Date.now()
             const data = await window.electronAPI.scanDirectory(path, { maxDepth })
+            console.log(`[FRONTEND] Received scan data in ${Date.now() - ipcStartTime}ms`)
+            console.log(`[FRONTEND] Data contains ${data.children?.length || 0} top-level items`)
+            
+            const setStateStartTime = Date.now()
             set({
                 directoryData: data,
                 selectedPath: path,
                 viewPath: path, // Reset view to root on new scan
                 isLoading: false
             })
+            console.log(`[FRONTEND] State updated in ${Date.now() - setStateStartTime}ms`)
+            
             // Reload recent directories after scan
+            const recentStartTime = Date.now()
             await get().loadRecentDirectories()
+            console.log(`[FRONTEND] Recent directories loaded in ${Date.now() - recentStartTime}ms`)
+            
+            console.log(`[FRONTEND] Total frontend time: ${Date.now() - startTime}ms`)
         } catch (error) {
             console.error('Error scanning directory:', error)
             set({ isLoading: false })

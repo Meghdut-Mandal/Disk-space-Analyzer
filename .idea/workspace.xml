@@ -4,7 +4,22 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="17ee84e7-d610-412d-9dd9-76a828c6583a" name="Changes" comment="Improved file access" />
+    <list default="true" id="17ee84e7-d610-412d-9dd9-76a828c6583a" name="Changes" comment="set default at 50mb">
+      <change afterPath="$PROJECT_DIR$/bun.lockb" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/out/main/fastScanner-6Pl5-4Sl.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/out/main/main.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/out/preload/preload.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/out/renderer/assets/index-CbAic99Y.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/out/renderer/assets/index-CoRDCGFH.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/out/renderer/index.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/main.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/main.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/utils/fastScanner.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/utils/fastScanner.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/renderer/components/TreemapView.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/renderer/components/TreemapView.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/renderer/store/useAppStore.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/renderer/store/useAppStore.ts" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -119,7 +134,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1764476902380</updated>
-      <workItem from="1764476903432" duration="14714000" />
+      <workItem from="1764476903432" duration="17593000" />
     </task>
     <task id="LOCAL-00001" summary="first commit">
       <option name="closed" value="true" />
@@ -193,7 +208,15 @@
       <option name="project" value="LOCAL" />
       <updated>1764497047587</updated>
     </task>
-    <option name="localTasksCounter" value="10" />
+    <task id="LOCAL-00010" summary="set default at 50mb">
+      <option name="closed" value="true" />
+      <created>1764497313760</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1764497313760</updated>
+    </task>
+    <option name="localTasksCounter" value="11" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -209,7 +232,8 @@
     <MESSAGE value="Added support for database" />
     <MESSAGE value="Added stats view with charts for file type breakdown and largest files list, along with toggling views in the UI." />
     <MESSAGE value="Improved file access" />
-    <option name="LAST_COMMIT_MESSAGE" value="Improved file access" />
+    <MESSAGE value="set default at 50mb" />
+    <option name="LAST_COMMIT_MESSAGE" value="set default at 50mb" />
   </component>
   <component name="ai.zencoder.plugin.mcp">
     <option name="internalToolsState" value="{&quot;file_search&quot;:true,&quot;list_resources&quot;:true,&quot;fulltext_search&quot;:true,&quot;read_resource&quot;:true}" />

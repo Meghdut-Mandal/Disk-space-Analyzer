@@ -69,33 +69,48 @@ ipcMain.handle('open-folder-dialog', async () => {
 })
 
 ipcMain.handle('scan-directory', async (_, path: string, options: any = {}) => {
+  const startTime = Date.now()
+  console.log(`[SCAN] Starting scan of: ${path}`)
+  
   if (!existsSync(path)) {
     throw new Error('Directory does not exist')
   }
+  
   // Try fast scan on non-Windows platforms
   let result
+  const scanStartTime = Date.now()
+  
   if (process.platform !== 'win32') {
     try {
+      console.log('[SCAN] Attempting fast scan (du command)...')
       const { scanDirectoryFast } = await import('./utils/fastScanner')
       result = await scanDirectoryFast(path)
+      console.log(`[SCAN] Fast scan completed in ${Date.now() - scanStartTime}ms`)
     } catch (error) {
       console.warn('Fast scan failed, falling back to standard scan:', error)
+      const fallbackStartTime = Date.now()
       result = await scanDirectory(path, options)
+      console.log(`[SCAN] Standard scan completed in ${Date.now() - fallbackStartTime}ms`)
     }
   } else {
+    console.log('[SCAN] Using standard scan (Windows platform)...')
     result = await scanDirectory(path, options)
+    console.log(`[SCAN] Standard scan completed in ${Date.now() - scanStartTime}ms`)
   }
 
   // Save to database
+  const dbStartTime = Date.now()
   try {
     const pathParts = path.split(/[/\\]/)
     const name = pathParts[pathParts.length - 1] || path
     await addDirectoryHistory(path, name, result.size)
     await logAction('scan', path)
+    console.log(`[SCAN] Database save completed in ${Date.now() - dbStartTime}ms`)
   } catch (error) {
     console.error('Error saving scan to database:', error)
   }
 
+  console.log(`[SCAN] Total scan time: ${Date.now() - startTime}ms`)
   return result
 })
 
