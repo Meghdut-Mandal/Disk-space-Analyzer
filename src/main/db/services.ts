@@ -74,8 +74,6 @@ export async function getRecentDirectories(
             raw: true // Get plain objects instead of Sequelize instances
         })
 
-        console.log('Raw database results:', results)
-
         return results.map((r: any) => {
             const mapped = {
                 path: r.path,
@@ -84,7 +82,6 @@ export async function getRecentDirectories(
                 lastScanned: new Date(r.lastScanned).toISOString(), // Serialize as ISO string
                 scanCount: r.scanCount
             }
-            console.log('Mapped result:', mapped)
             return mapped
         })
     } catch (error) {

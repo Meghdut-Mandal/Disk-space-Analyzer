@@ -4,16 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="17ee84e7-d610-412d-9dd9-76a828c6583a" name="Changes" comment="Updated the state management">
+    <list default="true" id="17ee84e7-d610-412d-9dd9-76a828c6583a" name="Changes" comment="Added support for database">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/main.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/main.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/utils/storage.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/preload/preload.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/preload/preload.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/db/services.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/db/services.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/renderer/App.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/renderer/App.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/renderer/components/MarkedList.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/renderer/components/TreemapView.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/renderer/components/TreemapView.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/renderer/electron.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/renderer/electron.d.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/renderer/store/useAppStore.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/renderer/store/useAppStore.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -130,7 +124,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1764476902380</updated>
-      <workItem from="1764476903432" duration="12794000" />
+      <workItem from="1764476903432" duration="13504000" />
     </task>
     <task id="LOCAL-00001" summary="first commit">
       <option name="closed" value="true" />
@@ -180,7 +174,15 @@
       <option name="project" value="LOCAL" />
       <updated>1764491095590</updated>
     </task>
-    <option name="localTasksCounter" value="7" />
+    <task id="LOCAL-00007" summary="Added support for database">
+      <option name="closed" value="true" />
+      <created>1764494183708</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1764494183708</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -193,7 +195,8 @@
     <MESSAGE value="Added support for git scanning" />
     <MESSAGE value="Fixes to improve performance" />
     <MESSAGE value="Updated the state management" />
-    <option name="LAST_COMMIT_MESSAGE" value="Updated the state management" />
+    <MESSAGE value="Added support for database" />
+    <option name="LAST_COMMIT_MESSAGE" value="Added support for database" />
   </component>
   <component name="ai.zencoder.plugin.mcp">
     <option name="internalToolsState" value="{&quot;file_search&quot;:true,&quot;list_resources&quot;:true,&quot;fulltext_search&quot;:true,&quot;read_resource&quot;:true}" />

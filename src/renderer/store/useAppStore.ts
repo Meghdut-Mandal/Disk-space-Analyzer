@@ -14,6 +14,7 @@ interface AppState {
     showDeleteConfirm: boolean
     selectedFile: string | null
     recentDirectories: Array<{ path: string; name: string; size: number; lastScanned: Date; scanCount: number }>
+    activeView: 'treemap' | 'stats'
 
     // Actions
     setDirectoryData: (data: DirectoryNode | null) => void
@@ -28,6 +29,7 @@ interface AppState {
     setShowDeleteConfirm: (show: boolean) => void
     setSelectedFile: (path: string | null) => void
     setRecentDirectories: (dirs: Array<{ path: string; name: string; size: number; lastScanned: Date; scanCount: number }>) => void
+    setActiveView: (view: 'treemap' | 'stats') => void
 
     // Async Actions (Thunks equivalent)
     scanDirectory: (path: string) => Promise<void>
@@ -49,6 +51,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     showDeleteConfirm: false,
     selectedFile: null,
     recentDirectories: [],
+    activeView: 'treemap',
 
     // Actions
     setDirectoryData: (data) => set({ directoryData: data }),
@@ -73,6 +76,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     setShowDeleteConfirm: (show) => set({ showDeleteConfirm: show }),
     setSelectedFile: (path) => set({ selectedFile: path }),
     setRecentDirectories: (dirs) => set({ recentDirectories: dirs }),
+    setActiveView: (view) => set({ activeView: view }),
 
     // Async Actions
     scanDirectory: async (path) => {

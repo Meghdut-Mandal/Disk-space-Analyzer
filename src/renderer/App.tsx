@@ -6,6 +6,7 @@ import FileActionsPanel from './components/FileActionsPanel'
 import DeleteConfirmation from './components/DeleteConfirmation'
 import Breadcrumbs from './components/Breadcrumbs'
 import RecentDirectories from './components/RecentDirectories'
+import StatsView from './components/StatsView'
 import { useAppStore } from './store/useAppStore'
 
 function App() {
@@ -18,9 +19,9 @@ function App() {
     showDeleteConfirm,
     setMarkedPaths,
     scanDirectory,
-    setShowDeleteConfirm,
-    exportMarked,
-    loadRecentDirectories
+    loadRecentDirectories,
+    activeView,
+    setActiveView
   } = useAppStore()
 
   // Load marked paths from storage on mount
@@ -97,6 +98,30 @@ function App() {
               </button>
             )}
           </div>
+
+          {/* View Toggle */}
+          {selectedPath && (
+            <div className="flex bg-gray-100 p-1 rounded-lg">
+              <button
+                onClick={() => setActiveView('treemap')}
+                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${activeView === 'treemap'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-500 hover:text-gray-700'
+                  }`}
+              >
+                Treemap
+              </button>
+              <button
+                onClick={() => setActiveView('stats')}
+                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${activeView === 'stats'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-500 hover:text-gray-700'
+                  }`}
+              >
+                Stats
+              </button>
+            </div>
+          )}
         </div>
         <ControlPanel />
         {selectedPath && viewPath && (
@@ -114,7 +139,7 @@ function App() {
             </div>
           ) : directoryData ? (
             <div className="flex-1 min-h-0">
-              <TreemapView />
+              {activeView === 'treemap' ? <TreemapView /> : <StatsView />}
             </div>
           ) : (
             <div className="flex items-center justify-center flex-1">
@@ -134,10 +159,12 @@ function App() {
         </div>
       </div>
 
-      {showDeleteConfirm && (
-        <DeleteConfirmation />
-      )}
-    </div>
+      {
+        showDeleteConfirm && (
+          <DeleteConfirmation />
+        )
+      }
+    </div >
   )
 }
 
