@@ -1,4 +1,5 @@
 import React from 'react'
+import { ChevronRight } from 'lucide-react'
 import { useAppStore } from '../store/useAppStore'
 
 export default function Breadcrumbs() {
@@ -35,7 +36,7 @@ export default function Breadcrumbs() {
         <nav className="flex items-center text-sm text-gray-600 overflow-x-auto whitespace-nowrap py-2">
             {items.map((item, index) => (
                 <React.Fragment key={item.path}>
-                    {index > 0 && <span className="mx-2 text-gray-400">/</span>}
+                    {index > 0 && <ChevronRight className="mx-2 w-4 h-4 text-gray-400" />}
                     <button
                         onClick={() => setViewPath(item.path)}
                         className={`hover:text-blue-600 hover:underline ${index === items.length - 1 ? 'font-semibold text-gray-900 pointer-events-none' : ''

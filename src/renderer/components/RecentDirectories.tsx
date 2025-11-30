@@ -1,4 +1,5 @@
 import bytes from 'bytes'
+import { Folder, ChevronRight } from 'lucide-react'
 import { useAppStore } from '../store/useAppStore'
 
 export default function RecentDirectories() {
@@ -50,9 +51,7 @@ export default function RecentDirectories() {
                     <div className="flex items-start justify-between gap-3">
                         <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
-                                <svg className="w-5 h-5 text-gray-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-                                </svg>
+                                <Folder className="w-5 h-5 text-gray-600 flex-shrink-0" />
                                 <div className="font-medium text-gray-800 truncate group-hover:text-blue-600 transition-colors">
                                     {dir.name}
                                 </div>
@@ -72,9 +71,7 @@ export default function RecentDirectories() {
                                 )}
                             </div>
                         </div>
-                        <svg className="w-5 h-5 text-gray-400 group-hover:text-blue-600 transition-colors flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
+                        <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-blue-600 transition-colors flex-shrink-0" />
                     </div>
                 </button>
             ))}

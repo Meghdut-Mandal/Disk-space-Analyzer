@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import bytes from 'bytes'
+import { Folder, Check, Plus, Download, Trash2 } from 'lucide-react'
 import { useAppStore } from '../store/useAppStore'
 import { DirectoryNode } from '../types'
 import RecentDirectories from './RecentDirectories'
@@ -63,9 +64,7 @@ export default function FileActionsPanel() {
                         {/* File Info */}
                         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                             <div className="flex items-start gap-3">
-                                <svg className="w-6 h-6 text-blue-600 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-                                </svg>
+                                <Folder className="w-6 h-6 text-blue-600 flex-shrink-0 mt-1" />
                                 <div className="flex-1 min-w-0">
                                     <div className="font-semibold text-gray-800 break-words">
                                         {selectedFileDetails.name}
@@ -89,22 +88,18 @@ export default function FileActionsPanel() {
                         <button
                             onClick={() => toggleMark(selectedFile)}
                             className={`w-full px-4 py-3 rounded-lg font-medium transition-colors ${isSelectedMarked
-                                    ? 'bg-yellow-100 text-yellow-800 border-2 border-yellow-400 hover:bg-yellow-200'
-                                    : 'bg-gray-100 text-gray-700 border-2 border-gray-300 hover:bg-gray-200'
+                                ? 'bg-yellow-100 text-yellow-800 border-2 border-yellow-400 hover:bg-yellow-200'
+                                : 'bg-gray-100 text-gray-700 border-2 border-gray-300 hover:bg-gray-200'
                                 }`}
                         >
                             {isSelectedMarked ? (
                                 <div className="flex items-center justify-center gap-2">
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                    </svg>
+                                    <Check className="w-5 h-5" />
                                     Marked for Deletion
                                 </div>
                             ) : (
                                 <div className="flex items-center justify-center gap-2">
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                                    </svg>
+                                    <Plus className="w-5 h-5" />
                                     Mark for Deletion
                                 </div>
                             )}
@@ -118,9 +113,7 @@ export default function FileActionsPanel() {
                                     disabled={markedPaths.size === 0}
                                     className="w-full px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors font-medium flex items-center justify-center gap-2"
                                 >
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                    </svg>
+                                    <Download className="w-5 h-5" />
                                     Export Marked
                                 </button>
                                 <button
@@ -128,9 +121,7 @@ export default function FileActionsPanel() {
                                     disabled={markedPaths.size === 0}
                                     className="w-full px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors font-medium flex items-center justify-center gap-2"
                                 >
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                    </svg>
+                                    <Trash2 className="w-5 h-5" />
                                     Delete Marked ({markedPaths.size})
                                 </button>
                             </div>
@@ -170,14 +161,16 @@ export default function FileActionsPanel() {
                             <div className="space-y-2">
                                 <button
                                     onClick={exportMarked}
-                                    className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm"
+                                    className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm flex items-center justify-center gap-2"
                                 >
+                                    <Download className="w-4 h-4" />
                                     Export List
                                 </button>
                                 <button
                                     onClick={() => setShowDeleteConfirm(true)}
-                                    className="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium text-sm"
+                                    className="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium text-sm flex items-center justify-center gap-2"
                                 >
+                                    <Trash2 className="w-4 h-4" />
                                     Delete All ({markedDirectories.length})
                                 </button>
                             </div>

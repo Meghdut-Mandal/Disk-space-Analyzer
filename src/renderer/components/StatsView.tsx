@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { PieChart as PieChartIcon, FileBarChart } from 'lucide-react'
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts'
 import bytes from 'bytes'
 import { useAppStore } from '../store/useAppStore'
@@ -50,7 +51,10 @@ const StatsView = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* File Type Breakdown */}
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                    <h3 className="text-lg font-semibold text-gray-800 mb-4">File Type Breakdown</h3>
+                    <div className="flex items-center gap-2 mb-4">
+                        <PieChartIcon className="w-5 h-5 text-gray-700" />
+                        <h3 className="text-lg font-semibold text-gray-800">File Type Breakdown</h3>
+                    </div>
                     <div className="h-[400px]">
                         <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
@@ -77,7 +81,10 @@ const StatsView = () => {
 
                 {/* Largest Files List */}
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 flex flex-col h-[466px]">
-                    <h3 className="text-lg font-semibold text-gray-800 mb-4">Top 50 Largest Files</h3>
+                    <div className="flex items-center gap-2 mb-4">
+                        <FileBarChart className="w-5 h-5 text-gray-700" />
+                        <h3 className="text-lg font-semibold text-gray-800">Top 50 Largest Files</h3>
+                    </div>
                     <div className="overflow-auto flex-1 pr-2">
                         <table className="w-full text-sm text-left">
                             <thead className="text-xs text-gray-500 uppercase bg-gray-50 sticky top-0">

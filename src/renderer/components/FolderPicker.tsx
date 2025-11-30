@@ -1,3 +1,4 @@
+import { FolderOpen } from 'lucide-react'
 import { useAppStore } from '../store/useAppStore'
 
 export default function FolderPicker() {
@@ -14,8 +15,9 @@ export default function FolderPicker() {
     <div className="flex items-center gap-4">
       <button
         onClick={handleSelect}
-        className="px-6 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-colors"
+        className="px-6 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-colors flex items-center gap-2"
       >
+        <FolderOpen className="w-4 h-4" />
         Select Folder
       </button>
       {selectedPath && (
