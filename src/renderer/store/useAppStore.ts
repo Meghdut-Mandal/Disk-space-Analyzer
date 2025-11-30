@@ -38,6 +38,49 @@ interface AppState {
     loadRecentDirectories: () => Promise<void>
 }
 
+/**
+ * Removes deleted paths from the directory tree and recalculates sizes.
+ * This is much faster than rescanning the entire directory.
+ * 
+ * @param node - The current directory node
+ * @param deletedPaths - Set of paths that were successfully deleted
+ * @returns Updated node with deleted paths removed and sizes recalculated, or null if this node was deleted
+ */
+function removeDeletedPathsFromTree(
+    node: DirectoryNode,
+    deletedPaths: Set<string>
+): DirectoryNode | null {
+    // If this node itself was deleted, return null
+    if (deletedPaths.has(node.path)) {
+        return null
+    }
+
+    // If this is a file (no children), return as-is
+    if (!node.isDirectory || node.children.length === 0) {
+        return node
+    }
+
+    // Recursively process children and filter out deleted ones
+    const updatedChildren: DirectoryNode[] = []
+    let newSize = 0
+
+    for (const child of node.children) {
+        const updatedChild = removeDeletedPathsFromTree(child, deletedPaths)
+        if (updatedChild !== null) {
+            updatedChildren.push(updatedChild)
+            newSize += updatedChild.size
+        }
+    }
+
+    // Return updated node with new children and recalculated size
+    return {
+        ...node,
+        children: updatedChildren,
+        size: node.isDirectory ? newSize : node.size
+    }
+}
+
+
 export const useAppStore = create<AppState>((set, get) => ({
     // Initial State
     directoryData: null,
@@ -114,33 +157,39 @@ export const useAppStore = create<AppState>((set, get) => ({
     },
 
     deleteMarked: async () => {
-        const { markedPaths, selectedPath, maxDepth } = get()
+        const { markedPaths, selectedPath, directoryData, viewPath } = get()
         const paths = Array.from(markedPaths)
         if (paths.length === 0) return
 
         try {
+            const deleteStartTime = Date.now()
             const result = await window.electronAPI.deleteDirectories(paths)
+            console.log(`[FRONTEND] File deletion completed in ${Date.now() - deleteStartTime}ms`)
+
             if (result.failed.length > 0) {
                 alert(`Some deletions failed:\n${result.failed.map((f) => `${f.path}: ${f.error}`).join('\n')}`)
             }
 
+            // Get successfully deleted paths
+            const successfullyDeleted = new Set(
+                paths.filter(p => !result.failed.some(f => f.path === p))
+            )
+
             set({ showDeleteConfirm: false, markedPaths: new Set() })
 
-            // Refresh directory data if we have a selected path
-            if (selectedPath) {
-                set({ isLoading: true })
-                try {
-                    const data = await window.electronAPI.scanDirectory(selectedPath, { maxDepth })
-                    set({
-                        directoryData: data,
-                        // Reset view path to root if current view was deleted or just to be safe
-                        viewPath: selectedPath,
-                        isLoading: false
-                    })
-                } catch (error) {
-                    console.error('Error refreshing directory:', error)
-                    set({ isLoading: false })
-                }
+            // Update directory data in memory instead of rescanning
+            if (directoryData && successfullyDeleted.size > 0) {
+                const updateStartTime = Date.now()
+                const updatedData = removeDeletedPathsFromTree(directoryData, successfullyDeleted)
+                console.log(`[FRONTEND] Tree updated in memory in ${Date.now() - updateStartTime}ms (no rescan needed!)`)
+
+                // Check if current viewPath was deleted, if so reset to root
+                const newViewPath = successfullyDeleted.has(viewPath || '') ? selectedPath : viewPath
+
+                set({
+                    directoryData: updatedData,
+                    viewPath: newViewPath
+                })
             }
         } catch (error) {
             console.error('Error deleting directories:', error)

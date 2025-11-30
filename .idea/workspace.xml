@@ -4,12 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="17ee84e7-d610-412d-9dd9-76a828c6583a" name="Changes" comment="Fixes to the treemap">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/main.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/main.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/utils/fastScanner.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/utils/fastScanner.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/utils/scanner.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/utils/scanner.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/renderer/electron.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/renderer/electron.d.ts" afterDir="false" />
+    <list default="true" id="17ee84e7-d610-412d-9dd9-76a828c6583a" name="Changes" comment="Improved the performance">
       <change beforePath="$PROJECT_DIR$/src/renderer/store/useAppStore.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/renderer/store/useAppStore.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -126,7 +121,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1764476902380</updated>
-      <workItem from="1764476903432" duration="22495000" />
+      <workItem from="1764476903432" duration="22896000" />
     </task>
     <task id="LOCAL-00001" summary="first commit">
       <option name="closed" value="true" />
@@ -248,7 +243,15 @@
       <option name="project" value="LOCAL" />
       <updated>1764502301313</updated>
     </task>
-    <option name="localTasksCounter" value="16" />
+    <task id="LOCAL-00016" summary="Improved the performance">
+      <option name="closed" value="true" />
+      <created>1764514863881</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1764514863881</updated>
+    </task>
+    <option name="localTasksCounter" value="17" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -270,7 +273,8 @@
     <MESSAGE value="Adjusted TreemapView padding for better layout handling" />
     <MESSAGE value="UX improvements" />
     <MESSAGE value="Fixes to the treemap" />
-    <option name="LAST_COMMIT_MESSAGE" value="Fixes to the treemap" />
+    <MESSAGE value="Improved the performance" />
+    <option name="LAST_COMMIT_MESSAGE" value="Improved the performance" />
   </component>
   <component name="ai.zencoder.plugin.mcp">
     <option name="internalToolsState" value="{&quot;file_search&quot;:true,&quot;list_resources&quot;:true,&quot;fulltext_search&quot;:true,&quot;read_resource&quot;:true}" />
