@@ -1,4 +1,4 @@
-import { readdir, stat, readFile } from 'fs/promises'
+import { readdir, lstat, readFile } from 'fs/promises'
 import { join, relative } from 'path'
 import ignore from 'ignore'
 
@@ -18,9 +18,10 @@ export interface ScanOptions {
 async function getDirSize(path: string): Promise<number> {
   let total = 0
   try {
-    const stats = await stat(path)
+    const stats = await lstat(path)
+    if (stats.isSymbolicLink()) return 0
     if (!stats.isDirectory()) {
-      return stats.size
+      return stats.isFile() ? stats.size : 0
     }
 
     const entries = await readdir(path)
@@ -54,13 +55,25 @@ export async function scanDirectory(rootPath: string, options: ScanOptions = {})
   }
 
   async function scanRecursive(path: string, name: string, depth: number): Promise<DirectoryNode> {
-    const stats = await stat(path)
+    // Use lstat to not follow symlinks
+    const stats = await lstat(path)
+
+    if (stats.isSymbolicLink()) {
+      // If the root itself is a symlink, treat it as a file (or 0 size node)
+      return {
+        name,
+        path,
+        size: 0,
+        children: [],
+        isDirectory: false,
+      }
+    }
 
     if (!stats.isDirectory()) {
       return {
         name,
         path,
-        size: stats.size,
+        size: stats.isFile() ? stats.size : 0,
         children: [],
         isDirectory: false,
       }
@@ -120,7 +133,9 @@ export async function scanDirectory(rootPath: string, options: ScanOptions = {})
           // The user said: "get the size of the ignored folder no need to go recursively into the ignored folders."
           // So we should include it in the tree as a leaf node with its size.
           try {
-            const entryStats = await stat(entryPath)
+            const entryStats = await lstat(entryPath)
+            if (entryStats.isSymbolicLink()) continue
+
             if (entryStats.isDirectory()) {
               const size = await getDirSize(entryPath)
               children.push({
@@ -142,6 +157,10 @@ export async function scanDirectory(rootPath: string, options: ScanOptions = {})
         }
 
         try {
+          // Check for symlinks before recursing
+          const entryStats = await lstat(entryPath)
+          if (entryStats.isSymbolicLink()) continue
+
           const child = await scanRecursive(entryPath, entry, depth + 1)
           children.push(child)
           totalSize += child.size

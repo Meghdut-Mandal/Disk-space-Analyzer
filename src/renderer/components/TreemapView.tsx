@@ -74,7 +74,7 @@ const CustomContent = (props: any) => {
   // For root node (depth 0), skip rendering as it's just a container
   // For actual data items, the properties are on props directly
   const { x, y, width, height, depth, markedPaths, onToggleMark, onDrillDown } = props
-  
+
   // Get data properties - they might be on props directly or in payload
   const dataItem = props.payload || props
   const { name, path, size, fill, children } = dataItem
@@ -273,7 +273,7 @@ export default function TreemapView({
           stroke="#fff"
           fill="#8884d8"
           animationDuration={400}
-          content={CustomContentWrapper}
+          content={<CustomContentWrapper />}
         >
           <Tooltip content={<CustomTooltip />} />
         </Treemap>

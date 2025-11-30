@@ -89,32 +89,6 @@ function App() {
     }
   }, [selectedPath])
 
-  const handleSelectFolderToDelete = useCallback(async () => {
-    const path = await window.electronAPI.openFolderDialog()
-    if (!path) return
-
-    const confirmed = window.confirm(
-      `Are you sure you want to delete the folder?\n\n${path}\n\nThis will move it to trash.`
-    )
-
-    if (!confirmed) return
-
-    try {
-      const result = await window.electronAPI.deleteDirectories([path])
-      if (result.failed.length > 0) {
-        alert(`Deletion failed:\n${result.failed.map((f) => `${f.path}: ${f.error}`).join('\n')}`)
-      } else {
-        // Refresh directory data if the deleted folder was within the current scan
-        if (selectedPath && path.startsWith(selectedPath)) {
-          await handleRefresh()
-        }
-      }
-    } catch (error) {
-      console.error('Error deleting folder:', error)
-      alert('Failed to delete folder')
-    }
-  }, [selectedPath, handleRefresh])
-
   const toggleMark = useCallback((path: string) => {
     setMarkedPaths((prev) => {
       const next = new Set(prev)
@@ -260,12 +234,7 @@ function App() {
             )}
           </div>
           <div className="flex gap-2">
-            <button
-              onClick={handleSelectFolderToDelete}
-              className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors shadow-sm"
-            >
-              Select Folder to Delete
-            </button>
+
             <button
               onClick={handleExport}
               disabled={markedPaths.size === 0}
