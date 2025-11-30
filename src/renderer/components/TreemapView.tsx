@@ -25,7 +25,7 @@ function convertToTreemapData(
 
   // Filter by search query
   const matchesSearch = !searchQuery || node.name.toLowerCase().includes(searchQuery.toLowerCase())
-  
+
   // Process children
   const children = node.children
     .map((child) => convertToTreemapData(child, markedPaths, searchQuery, sizeFilter))
@@ -49,7 +49,7 @@ function convertToTreemapData(
 
 function getColorByDepth(path: string): string {
   const depth = path.split(/[/\\]/).length
-  // Modern, vibrant palette
+  // Vibrant, extended palette
   const colors = [
     '#3b82f6', // blue-500
     '#8b5cf6', // violet-500
@@ -59,32 +59,58 @@ function getColorByDepth(path: string): string {
     '#6366f1', // indigo-500
     '#06b6d4', // cyan-500
     '#f43f5e', // rose-500
+    '#84cc16', // lime-500
+    '#d946ef', // fuchsia-500
+    '#0ea5e9', // sky-500
+    '#14b8a6', // teal-500
+    '#eab308', // yellow-500
+    '#f97316', // orange-500
   ]
   return colors[depth % colors.length]
 }
 
 const CustomContent = (props: any) => {
-  const { x, y, width, height, payload, markedPaths, onToggleMark, onDrillDown } = props
+  // Recharts Treemap passes data properties directly on props
+  // For root node (depth 0), skip rendering as it's just a container
+  // For actual data items, the properties are on props directly
+  const { x, y, width, height, depth, markedPaths, onToggleMark, onDrillDown } = props
+  
+  // Get data properties - they might be on props directly or in payload
+  const dataItem = props.payload || props
+  const { name, path, size, fill, children } = dataItem
 
-  // Debug logging
-  if (props.depth === 0 || (props.depth === undefined && width > 10)) {
-    console.log('CustomContent called:', {
-      depth: props.depth,
+  // Debug logging - log all props keys to understand structure
+  // Log first few calls to understand the data structure
+  if (!window._treemapDebugCount) {
+    window._treemapDebugCount = 0
+  }
+  if (window._treemapDebugCount < 5) {
+    window._treemapDebugCount++
+    console.log(`CustomContent call #${window._treemapDebugCount} - all props keys:`, Object.keys(props))
+    console.log(`CustomContent call #${window._treemapDebugCount} - props:`, {
+      depth,
       x, y, width, height,
-      payloadName: payload?.name,
-      payloadSize: payload?.size,
-      hasChildren: !!payload?.children,
-      childrenCount: payload?.children?.length
+      name: dataItem.name,
+      size: dataItem.size,
+      path: dataItem.path,
+      fill: dataItem.fill,
+      hasChildren: !!dataItem.children,
+      childrenCount: dataItem.children?.length,
+      hasPayload: !!props.payload,
+      payloadKeys: props.payload ? Object.keys(props.payload) : [],
+      allProps: props
     })
   }
 
-  if (width < 5 || height < 5 || !payload) {
+  // Skip root container node (depth 0) - it doesn't have data properties
+  // Also skip if we don't have the required data properties
+  if (depth === 0 || width < 5 || height < 5 || !name || size === undefined) {
     return null
   }
 
-  const isMarked = markedPaths.has(payload.path)
+  const isMarked = markedPaths.has(path)
   const fontSize = Math.min(width / 8, height / 4, 14)
-  const isDirectory = payload.children && payload.children.length > 0
+  const isDirectory = children && children.length > 0
 
   return (
     <g>
@@ -93,14 +119,14 @@ const CustomContent = (props: any) => {
         y={y}
         width={width}
         height={height}
-        fill={payload.fill}
+        fill={fill || '#8884d8'}
         stroke={isMarked ? '#dc2626' : '#ffffff'}
         strokeWidth={isMarked ? 3 : 1}
         opacity={0.9}
         onClick={(e) => {
           e.stopPropagation()
           if (isDirectory) {
-            onDrillDown(payload.path)
+            onDrillDown(path)
           }
         }}
         style={{ cursor: isDirectory ? 'pointer' : 'default' }}
@@ -112,7 +138,7 @@ const CustomContent = (props: any) => {
         <g
           onClick={(e) => {
             e.stopPropagation()
-            onToggleMark(payload.path)
+            onToggleMark(path)
           }}
           style={{ cursor: 'pointer' }}
         >
@@ -137,7 +163,7 @@ const CustomContent = (props: any) => {
             pointerEvents="none"
             style={{ textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}
           >
-            {payload.name}
+            {name}
           </text>
           <text
             x={x + width / 2}
@@ -148,7 +174,7 @@ const CustomContent = (props: any) => {
             pointerEvents="none"
             style={{ textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}
           >
-            {bytes(payload.size)}
+            {bytes(size)}
           </text>
         </>
       )}
@@ -213,17 +239,29 @@ export default function TreemapView({
       children: undefined // Remove nested children for flat visualization
     }))
   }
-  
-  const treemapItems = treemapData.children && treemapData.children.length > 0 
+
+  const treemapItems = treemapData.children && treemapData.children.length > 0
     ? flattenChildren(treemapData.children)
     : [treemapData]
-  
+
   console.log('Treemap items (flattened):', treemapItems.length)
   console.log('First item:', treemapItems[0] ? {
     name: treemapItems[0].name,
     size: treemapItems[0].size,
     hasChildren: !!treemapItems[0].children
   } : 'no items')
+
+  // Create a wrapper component that captures the props from TreemapView scope
+  const CustomContentWrapper = useMemo(() => {
+    return (props: any) => {
+      return CustomContent({
+        ...props,
+        markedPaths,
+        onToggleMark,
+        onDrillDown,
+      })
+    }
+  }, [markedPaths, onToggleMark, onDrillDown])
 
   return (
     <div className="w-full h-full">
@@ -235,6 +273,7 @@ export default function TreemapView({
           stroke="#fff"
           fill="#8884d8"
           animationDuration={400}
+          content={CustomContentWrapper}
         >
           <Tooltip content={<CustomTooltip />} />
         </Treemap>

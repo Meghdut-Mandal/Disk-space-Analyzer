@@ -55,7 +55,7 @@ ipcMain.handle('open-folder-dialog', async () => {
   if (!mainWindow) {
     throw new Error('Main window not available')
   }
-  
+
   const result = await dialog.showOpenDialog(mainWindow, {
     properties: ['openDirectory'],
   })
@@ -67,11 +67,11 @@ ipcMain.handle('open-folder-dialog', async () => {
   return result.filePaths[0]
 })
 
-ipcMain.handle('scan-directory', async (_, path: string) => {
+ipcMain.handle('scan-directory', async (_, path: string, options: any = {}) => {
   if (!existsSync(path)) {
     throw new Error('Directory does not exist')
   }
-  return await scanDirectory(path)
+  return await scanDirectory(path, options)
 })
 
 ipcMain.handle('delete-directories', async (_, paths: string[]) => {
@@ -82,7 +82,7 @@ ipcMain.handle('export-marked-list', async (_, data: Array<{ path: string; size:
   if (!mainWindow) {
     throw new Error('Main window not available')
   }
-  
+
   const result = await dialog.showSaveDialog(mainWindow, {
     defaultPath: `marked-directories.${format}`,
     filters: [

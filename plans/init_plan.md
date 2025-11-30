@@ -1,122 +1,29 @@
-# Electron Directory Treemap App
+Walkthrough - Scanning Improvements and UI Updates
+I have implemented the requested improvements to the scanning functionality and the user interface.
 
-## Project Structure Setup
-
-- Initialize Electron + React project using Vite for fast builds
-- Configure bun as package manager
-- Setup TypeScript for type safety
-- Configure Electron Forge or similar for building/packaging
-
-## Core Dependencies
-
-- **Electron**: Main app framework
-- **React + React DOM**: UI framework
-- **Recharts** or **D3.js**: Treemap visualization library (Recharts for simplicity, D3 for customization)
-- **electron-store**: Persist marked directories between sessions
-- **Tailwind CSS**: Modern, utility-first styling
-
-## Backend (Electron Main Process)
-
-Create main process handlers in [`src/main/main.ts`](src/main/main.ts):
-
-- **IPC Handler**: `scan-directory` - recursively scan folder, calculate sizes
-- **IPC Handler**: `open-folder-dialog` - native file picker dialog
-- **IPC Handler**: `delete-directories` - delete marked directories with validation
-- **IPC Handler**: `export-marked-list` - export to JSON/CSV file
-- Use Node.js `fs` module for file operations
-- Implement efficient recursive directory scanning with size calculation
-
-## Frontend (React Renderer Process)
-
-Create React application in [`src/renderer/`](src/renderer/):
-
-### Main Components
-
-1. **App.tsx**: Main layout and state management
-2. **FolderPicker.tsx**: Button to trigger folder selection dialog
-3. **TreemapView.tsx**: Interactive treemap visualization
-
-    - Display directories as sized rectangles
-    - Color coding by size or depth
-    - Click to drill down into subdirectories
-    - Visual indicator for marked items (e.g., red border, overlay)
-
-4. **ControlPanel.tsx**: Search, filters, and action buttons
-5. **MarkedList.tsx**: Sidebar showing marked directories with total size
-6. **DeleteConfirmation.tsx**: Modal for bulk deletion confirmation
-
-### State Management
-
-- React Context or useState for:
-    - Current directory data
-    - Marked directories (Set of paths)
-    - Selected folder path
-    - Search query
-    - Size filter threshold
-
-### Features Implementation
-
-1. **Search**: Filter visible directories by name using input field
-2. **Size Filters**: Slider/dropdown to show only directories above threshold (e.g., >100MB, >1GB)
-3. **Persistence**: Save/load marked directories using electron-store
-4. **Export**: Export marked list with sizes to CSV or JSON file
-
-## UI Design
-
-- **Color Scheme**: Modern palette (e.g., grays, blues, accent colors for warnings)
-- **Layout**:
-    - Top: Folder picker + control panel
-    - Main: Treemap visualization (fills most space)
-    - Right sidebar: List of marked directories
-    - Bottom: Action buttons (Export, Delete All Marked)
-- **Typography**: Clean, sans-serif font (Inter or system fonts)
-- **Interactions**: Hover tooltips showing full path and size, click to mark/unmark
-
-## File Structure
-
-```
-size-manager/
-├── package.json
-├── tsconfig.json
-├── vite.config.ts
-├── electron.vite.config.ts
-├── src/
-│   ├── main/
-│   │   ├── main.ts (Electron main process)
-│   │   ├── preload.ts (IPC bridge)
-│   │   └── utils/
-│   │       ├── scanner.ts (directory scanning logic)
-│   │       └── storage.ts (persistence logic)
-│   └── renderer/
-│       ├── index.html
-│       ├── main.tsx
-│       ├── App.tsx
-│       ├── components/
-│       │   ├── FolderPicker.tsx
-│       │   ├── TreemapView.tsx
-│       │   ├── ControlPanel.tsx
-│       │   ├── MarkedList.tsx
-│       │   └── DeleteConfirmation.tsx
-│       ├── hooks/
-│       │   └── useDirectoryData.ts
-│       ├── types/
-│       │   └── index.ts
-│       └── styles/
-│           └── globals.css
-└── README.md
-```
-
-## Key Technical Decisions
-
-1. Use **Recharts Treemap** for visualization (simpler than D3, good for this use case)
-2. Use **bytes** library for human-readable size formatting
-3. Implement **debounced search** to avoid performance issues
-4. Add **loading states** during directory scanning
-5. Size calculation happens in main process (access to file system)
-
-## Safety Features
-
-- Confirmation dialog before deletion with list of what will be deleted
-- Prevent deletion of system/protected directories
-- Show total size to be freed
-- Option to move to trash instead of permanent deletion (using `trash` package)
+Changes
+1. Improved Scanning Logic
+   .gitignore Support: The scanner now respects
+   .gitignore
+   files. Ignored directories (like node_modules) are calculated for size but not scanned recursively, significantly improving performance and reducing noise.
+   Max Depth Configuration: Added a "Max Depth" setting to the scanner. This prevents the treemap from becoming too cluttered with deep nested structures.
+2. UI Enhancements
+   Colorful Treemap: Updated the
+   TreemapView
+   to use a more vibrant and extended color palette, making it easier to distinguish between different directories.
+   Custom Content: The treemap now uses custom rendering for better visual control.
+   Control Panel: Added a "Max Depth" input field to the control panel (default: 10).
+   Verification Results
+   Automated Checks
+   npm exec tsc passed successfully, confirming no type errors were introduced.
+   Manual Verification Steps
+   Launch the App: Run npm run dev.
+   Test Max Depth:
+   Change "Max Depth" to 1.
+   Scan a folder.
+   Verify that only the top-level folders are shown in the treemap.
+   Test .gitignore:
+   Scan a project folder containing node_modules.
+   Verify that node_modules appears as a single block with its total size, but you cannot drill down into it.
+   Test Colors:
+   Observe the treemap colors. They should be more vibrant and varied than before.

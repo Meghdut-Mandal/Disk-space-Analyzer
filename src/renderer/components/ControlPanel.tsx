@@ -3,6 +3,8 @@ interface ControlPanelProps {
   onSearchChange: (query: string) => void
   sizeFilter: number
   onSizeFilterChange: (size: number) => void
+  maxDepth: number
+  onMaxDepthChange: (depth: number) => void
 }
 
 const SIZE_THRESHOLDS = [
@@ -18,6 +20,8 @@ export default function ControlPanel({
   onSearchChange,
   sizeFilter,
   onSizeFilterChange,
+  maxDepth,
+  onMaxDepthChange,
 }: ControlPanelProps) {
   return (
     <div className="flex items-center gap-4">
@@ -28,6 +32,17 @@ export default function ControlPanel({
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+      <div className="flex items-center gap-2">
+        <label className="text-sm text-gray-600">Max Depth:</label>
+        <input
+          type="number"
+          min="1"
+          max="50"
+          value={maxDepth}
+          onChange={(e) => onMaxDepthChange(Math.max(1, Math.min(50, Number(e.target.value))))}
+          className="w-16 px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
       </div>
       <div className="flex items-center gap-2">

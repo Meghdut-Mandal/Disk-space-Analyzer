@@ -10,7 +10,7 @@ export interface DirectoryNode {
 
 contextBridge.exposeInMainWorld('electronAPI', {
   openFolderDialog: () => ipcRenderer.invoke('open-folder-dialog'),
-  scanDirectory: (path: string) => ipcRenderer.invoke('scan-directory', path),
+  scanDirectory: (path: string, options?: { maxDepth?: number }) => ipcRenderer.invoke('scan-directory', path, options),
   deleteDirectories: (paths: string[]) => ipcRenderer.invoke('delete-directories', paths),
   exportMarkedList: (data: Array<{ path: string; size: number }>, format: 'json' | 'csv') =>
     ipcRenderer.invoke('export-marked-list', data, format),

@@ -14,6 +14,7 @@ function App() {
   const [markedPaths, setMarkedPaths] = useState<Set<string>>(new Set())
   const [searchQuery, setSearchQuery] = useState('')
   const [sizeFilter, setSizeFilter] = useState(0)
+  const [maxDepth, setMaxDepth] = useState(10)
   const [isLoading, setIsLoading] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
@@ -32,13 +33,13 @@ function App() {
 
   // Save marked paths to storage whenever they change (but not on initial mount)
   const [isInitialLoad, setIsInitialLoad] = useState(true)
-  
+
   useEffect(() => {
     if (isInitialLoad) {
       setIsInitialLoad(false)
       return
     }
-    
+
     const saveMarkedPaths = async () => {
       try {
         await window.electronAPI.saveMarkedPaths(Array.from(markedPaths))
@@ -57,7 +58,7 @@ function App() {
       setViewPath(path)
       setIsLoading(true)
       try {
-        const data = await window.electronAPI.scanDirectory(path)
+        const data = await window.electronAPI.scanDirectory(path, { maxDepth })
         console.log('Scanned data:', data)
         console.log('Data path:', data.path)
         console.log('Data children count:', data.children.length)
@@ -73,10 +74,10 @@ function App() {
 
   const handleRefresh = useCallback(async () => {
     if (!selectedPath) return
-    
+
     setIsLoading(true)
     try {
-      const data = await window.electronAPI.scanDirectory(selectedPath)
+      const data = await window.electronAPI.scanDirectory(selectedPath, { maxDepth })
       setDirectoryData(data)
       // Reset view path to root
       setViewPath(selectedPath)
@@ -95,7 +96,7 @@ function App() {
     const confirmed = window.confirm(
       `Are you sure you want to delete the folder?\n\n${path}\n\nThis will move it to trash.`
     )
-    
+
     if (!confirmed) return
 
     try {
@@ -154,7 +155,7 @@ function App() {
       if (selectedPath) {
         setIsLoading(true)
         try {
-          const data = await window.electronAPI.scanDirectory(selectedPath)
+          const data = await window.electronAPI.scanDirectory(selectedPath, { maxDepth })
           setDirectoryData(data)
           // Reset view path to root if current view was deleted
           setViewPath(selectedPath)
@@ -209,7 +210,7 @@ function App() {
     }
 
     const result = findNode(directoryData, viewPath)
-    
+
     // Debug logging
     console.log('Finding node for viewPath:', viewPath)
     console.log('directoryData path:', directoryData.path)
@@ -221,7 +222,7 @@ function App() {
       console.log('Normalized viewPath:', viewPath.replace(/\\/g, '/').replace(/\/+$/, ''))
       console.log('Normalized directoryData path:', directoryData.path.replace(/\\/g, '/').replace(/\/+$/, ''))
     }
-    
+
     return result
   }, [directoryData, viewPath])
 
@@ -239,7 +240,7 @@ function App() {
           {selectedPath && <span className="truncate max-w-md">{selectedPath}</span>}
         </div>
       </div>
-      
+
       <div className="flex-shrink-0 bg-white border-b border-gray-200 p-4 shadow-sm z-10">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
@@ -286,6 +287,8 @@ function App() {
           onSearchChange={setSearchQuery}
           sizeFilter={sizeFilter}
           onSizeFilterChange={setSizeFilter}
+          maxDepth={maxDepth}
+          onMaxDepthChange={setMaxDepth}
         />
         {selectedPath && viewPath && (
           <div className="mt-2">
