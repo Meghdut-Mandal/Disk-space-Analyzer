@@ -17,7 +17,8 @@ function createWindow() {
       nodeIntegration: false,
       contextIsolation: true,
     },
-    titleBarStyle: 'hiddenInset',
+    titleBarStyle: 'hidden',
+    trafficLightPosition: { x: 10, y: 10 },
   })
 
   // In development, use the Vite dev server URL
@@ -51,7 +52,11 @@ app.on('window-all-closed', () => {
 
 // IPC Handlers
 ipcMain.handle('open-folder-dialog', async () => {
-  const result = await dialog.showOpenDialog(mainWindow!, {
+  if (!mainWindow) {
+    throw new Error('Main window not available')
+  }
+  
+  const result = await dialog.showOpenDialog(mainWindow, {
     properties: ['openDirectory'],
   })
 
@@ -74,7 +79,11 @@ ipcMain.handle('delete-directories', async (_, paths: string[]) => {
 })
 
 ipcMain.handle('export-marked-list', async (_, data: Array<{ path: string; size: number }>, format: 'json' | 'csv') => {
-  const result = await dialog.showSaveDialog(mainWindow!, {
+  if (!mainWindow) {
+    throw new Error('Main window not available')
+  }
+  
+  const result = await dialog.showSaveDialog(mainWindow, {
     defaultPath: `marked-directories.${format}`,
     filters: [
       { name: format === 'json' ? 'JSON' : 'CSV', extensions: [format] },

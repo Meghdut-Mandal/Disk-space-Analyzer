@@ -19,10 +19,15 @@ export default function Breadcrumbs({ path, onNavigate, rootPath }: BreadcrumbsP
     const relativePath = normalizedPath.slice(normalizedRoot.length)
     const parts = relativePath.split('/').filter(Boolean)
 
+    // Determine the path separator from the original path
+    const separator = path.includes('\\') ? '\\' : '/'
+
     const items = [
         { name: rootPath.split(/[/\\]/).pop() || rootPath, path: rootPath },
         ...parts.map((part, index) => {
-            const currentPath = normalizedRoot + '/' + parts.slice(0, index + 1).join('/')
+            // Reconstruct path using original separator
+            const pathParts = parts.slice(0, index + 1)
+            const currentPath = rootPath + separator + pathParts.join(separator)
             return { name: part, path: currentPath }
         }),
     ]

@@ -1,5 +1,4 @@
 import { existsSync } from 'fs'
-import { join } from 'path'
 
 export async function deleteDirectories(paths: string[]): Promise<{ success: string[]; failed: Array<{ path: string; error: string }> }> {
   const success: string[] = []
@@ -31,9 +30,13 @@ export async function deleteDirectories(paths: string[]): Promise<{ success: str
     }
 
     // Check if path is protected or inside a protected path
-    const isProtected = PROTECTED_PATHS.some(protectedPath =>
-      path === protectedPath || path.startsWith(join(protectedPath, '/'))
-    )
+    const isProtected = PROTECTED_PATHS.some(protectedPath => {
+      // Normalize paths for comparison
+      const normalizedPath = path.replace(/\\/g, '/')
+      const normalizedProtected = protectedPath.replace(/\\/g, '/')
+      return normalizedPath === normalizedProtected || 
+             normalizedPath.startsWith(normalizedProtected + '/')
+    })
 
     if (isProtected) {
       failed.push({ path, error: 'Path is protected and cannot be deleted' })

@@ -30,8 +30,15 @@ function App() {
     loadMarkedPaths()
   }, [])
 
-  // Save marked paths to storage whenever they change
+  // Save marked paths to storage whenever they change (but not on initial mount)
+  const [isInitialLoad, setIsInitialLoad] = useState(true)
+  
   useEffect(() => {
+    if (isInitialLoad) {
+      setIsInitialLoad(false)
+      return
+    }
+    
     const saveMarkedPaths = async () => {
       try {
         await window.electronAPI.saveMarkedPaths(Array.from(markedPaths))
@@ -40,16 +47,20 @@ function App() {
       }
     }
     saveMarkedPaths()
-  }, [markedPaths])
+  }, [markedPaths, isInitialLoad])
 
   const handleFolderSelect = useCallback(async () => {
     const path = await window.electronAPI.openFolderDialog()
     if (path) {
+      console.log('Selected path:', path)
       setSelectedPath(path)
       setViewPath(path)
       setIsLoading(true)
       try {
         const data = await window.electronAPI.scanDirectory(path)
+        console.log('Scanned data:', data)
+        console.log('Data path:', data.path)
+        console.log('Data children count:', data.children.length)
         setDirectoryData(data)
       } catch (error) {
         console.error('Error scanning directory:', error)
@@ -72,6 +83,20 @@ function App() {
     })
   }, [])
 
+  const getMarkedDirectories = useCallback((): Array<{ path: string; size: number }> => {
+    if (!directoryData) return []
+
+    const result: Array<{ path: string; size: number }> = []
+    const collect = (node: DirectoryNode): void => {
+      if (markedPaths.has(node.path)) {
+        result.push({ path: node.path, size: node.size })
+      }
+      node.children.forEach(collect)
+    }
+    collect(directoryData)
+    return result
+  }, [directoryData, markedPaths])
+
   const handleDelete = useCallback(async () => {
     const paths = Array.from(markedPaths)
     if (paths.length === 0) return
@@ -88,6 +113,8 @@ function App() {
         try {
           const data = await window.electronAPI.scanDirectory(selectedPath)
           setDirectoryData(data)
+          // Reset view path to root if current view was deleted
+          setViewPath(selectedPath)
         } finally {
           setIsLoading(false)
         }
@@ -107,38 +134,19 @@ function App() {
 
     if (!directoryData) return
 
-    // Collect marked directory data
-    const collectMarked = (node: DirectoryNode, result: Array<{ path: string; size: number }> = []): void => {
-      if (markedPaths.has(node.path)) {
-        result.push({ path: node.path, size: node.size })
-      }
-      node.children.forEach((child) => collectMarked(child, result))
-    }
-
-    const markedData: Array<{ path: string; size: number }> = []
-    collectMarked(directoryData, markedData)
+    const markedData = getMarkedDirectories()
 
     try {
-      await window.electronAPI.exportMarkedList(markedData, 'json')
+      const result = await window.electronAPI.exportMarkedList(markedData, 'json')
+      if (result === null) {
+        // User cancelled the export dialog
+        return
+      }
     } catch (error) {
       console.error('Error exporting:', error)
       alert('Failed to export list')
     }
-  }, [markedPaths, directoryData])
-
-  const getMarkedDirectories = useCallback((): Array<{ path: string; size: number }> => {
-    if (!directoryData) return []
-
-    const result: Array<{ path: string; size: number }> = []
-    const collect = (node: DirectoryNode): void => {
-      if (markedPaths.has(node.path)) {
-        result.push({ path: node.path, size: node.size })
-      }
-      node.children.forEach(collect)
-    }
-    collect(directoryData)
-    return result
-  }, [directoryData, markedPaths])
+  }, [markedPaths, directoryData, getMarkedDirectories])
 
   // Find the node corresponding to the current viewPath
   const currentViewNode = useMemo(() => {
@@ -147,7 +155,7 @@ function App() {
     // Helper to find node by path
     const findNode = (node: DirectoryNode, targetPath: string): DirectoryNode | null => {
       // Normalize paths for comparison
-      const normalize = (p: string) => p.replace(/\\/g, '/')
+      const normalize = (p: string) => p.replace(/\\/g, '/').replace(/\/+$/, '') // Remove trailing slashes
       if (normalize(node.path) === normalize(targetPath)) return node
 
       for (const child of node.children) {
@@ -157,11 +165,38 @@ function App() {
       return null
     }
 
-    return findNode(directoryData, viewPath)
+    const result = findNode(directoryData, viewPath)
+    
+    // Debug logging
+    console.log('Finding node for viewPath:', viewPath)
+    console.log('directoryData path:', directoryData.path)
+    console.log('Result found:', !!result)
+    if (result) {
+      console.log('Result:', result)
+    } else {
+      console.log('Could not find node!')
+      console.log('Normalized viewPath:', viewPath.replace(/\\/g, '/').replace(/\/+$/, ''))
+      console.log('Normalized directoryData path:', directoryData.path.replace(/\\/g, '/').replace(/\/+$/, ''))
+    }
+    
+    return result
   }, [directoryData, viewPath])
 
   return (
     <div className="flex flex-col h-screen bg-gray-50 font-sans text-gray-900">
+      {/* Draggable Title Bar */}
+      <div className="flex-shrink-0 bg-gradient-to-r from-gray-800 to-gray-700 text-white px-4 py-2 flex items-center justify-between" style={{ WebkitAppRegion: 'drag' } as any}>
+        <div className="flex items-center gap-2 pl-16">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+          </svg>
+          <span className="font-semibold text-sm">Size Manager</span>
+        </div>
+        <div className="text-xs text-gray-300">
+          {selectedPath && <span className="truncate max-w-md">{selectedPath}</span>}
+        </div>
+      </div>
+      
       <div className="flex-shrink-0 bg-white border-b border-gray-200 p-4 shadow-sm z-10">
         <div className="flex items-center justify-between mb-4">
           <FolderPicker onSelect={handleFolderSelect} selectedPath={selectedPath} />
@@ -196,22 +231,24 @@ function App() {
       </div>
 
       <div className="flex flex-1 overflow-hidden">
-        <div className="flex-1 overflow-auto p-4 bg-gray-50">
+        <div className="flex-1 p-4 bg-gray-50 flex flex-col">
           {isLoading ? (
-            <div className="flex items-center justify-center h-full">
+            <div className="flex items-center justify-center flex-1">
               <div className="text-gray-500 animate-pulse">Scanning directory...</div>
             </div>
           ) : currentViewNode ? (
-            <TreemapView
-              data={currentViewNode}
-              markedPaths={markedPaths}
-              onToggleMark={toggleMark}
-              onDrillDown={setViewPath}
-              searchQuery={searchQuery}
-              sizeFilter={sizeFilter}
-            />
+            <div className="flex-1 min-h-0">
+              <TreemapView
+                data={currentViewNode}
+                markedPaths={markedPaths}
+                onToggleMark={toggleMark}
+                onDrillDown={setViewPath}
+                searchQuery={searchQuery}
+                sizeFilter={sizeFilter}
+              />
+            </div>
           ) : (
-            <div className="flex items-center justify-center h-full text-gray-400">
+            <div className="flex items-center justify-center flex-1 text-gray-400">
               Select a folder to begin analyzing
             </div>
           )}

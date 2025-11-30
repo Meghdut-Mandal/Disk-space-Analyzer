@@ -18,34 +18,23 @@ function convertToTreemapData(
   searchQuery: string,
   sizeFilter: number
 ): TreemapData | null {
-  // Filter by search query
-  if (searchQuery && !node.name.toLowerCase().includes(searchQuery.toLowerCase())) {
-    // Check if any children match
-    const matchingChildren = node.children
-      .map((child) => convertToTreemapData(child, markedPaths, searchQuery, sizeFilter))
-      .filter((child): child is TreemapData => child !== null)
-
-    if (matchingChildren.length === 0) {
-      return null
-    }
-
-    return {
-      name: node.name,
-      path: node.path,
-      size: node.size,
-      children: matchingChildren,
-      fill: markedPaths.has(node.path) ? '#ef4444' : '#3b82f6',
-    }
-  }
-
-  // Filter by size
+  // Filter by size first (more efficient)
   if (sizeFilter > 0 && node.size < sizeFilter) {
     return null
   }
 
+  // Filter by search query
+  const matchesSearch = !searchQuery || node.name.toLowerCase().includes(searchQuery.toLowerCase())
+  
+  // Process children
   const children = node.children
     .map((child) => convertToTreemapData(child, markedPaths, searchQuery, sizeFilter))
     .filter((child): child is TreemapData => child !== null)
+
+  // If node doesn't match search but has matching children, include it
+  if (!matchesSearch && children.length === 0) {
+    return null
+  }
 
   const fill = markedPaths.has(node.path) ? '#ef4444' : getColorByDepth(node.path)
 
@@ -76,6 +65,18 @@ function getColorByDepth(path: string): string {
 
 const CustomContent = (props: any) => {
   const { x, y, width, height, payload, markedPaths, onToggleMark, onDrillDown } = props
+
+  // Debug logging
+  if (props.depth === 0 || (props.depth === undefined && width > 10)) {
+    console.log('CustomContent called:', {
+      depth: props.depth,
+      x, y, width, height,
+      payloadName: payload?.name,
+      payloadSize: payload?.size,
+      hasChildren: !!payload?.children,
+      childrenCount: payload?.children?.length
+    })
+  }
 
   if (width < 5 || height < 5 || !payload) {
     return null
@@ -181,13 +182,21 @@ export default function TreemapView({
   sizeFilter,
 }: TreemapViewProps) {
   const treemapData = useMemo(() => {
+    console.log('TreemapView converting data:', data)
+    console.log('Search query:', searchQuery, 'Size filter:', sizeFilter)
     const converted = convertToTreemapData(data, markedPaths, searchQuery, sizeFilter)
-    if (!converted) return []
-    // If the root has children, we want to show them. If not, show the root itself.
-    return converted.children && converted.children.length > 0 ? converted.children : [converted]
+    console.log('Converted data:', converted)
+    if (!converted) {
+      console.log('Converted is null, returning null')
+      return null
+    }
+    console.log('Returning converted data with children:', converted.children?.length)
+    return converted
   }, [data, markedPaths, searchQuery, sizeFilter])
 
-  if (treemapData.length === 0) {
+  console.log('Rendering TreemapView with treemapData:', treemapData)
+
+  if (!treemapData) {
     return (
       <div className="flex items-center justify-center h-full text-gray-400">
         No directories match the current filters
@@ -195,21 +204,36 @@ export default function TreemapView({
     )
   }
 
+  // Recharts Treemap works best with a flat array of top-level items
+  // For nested structures, we need to flatten to show only the current level
+  // Remove nested children to show only top-level items
+  const flattenChildren = (items: TreemapData[]): TreemapData[] => {
+    return items.map(item => ({
+      ...item,
+      children: undefined // Remove nested children for flat visualization
+    }))
+  }
+  
+  const treemapItems = treemapData.children && treemapData.children.length > 0 
+    ? flattenChildren(treemapData.children)
+    : [treemapData]
+  
+  console.log('Treemap items (flattened):', treemapItems.length)
+  console.log('First item:', treemapItems[0] ? {
+    name: treemapItems[0].name,
+    size: treemapItems[0].size,
+    hasChildren: !!treemapItems[0].children
+  } : 'no items')
+
   return (
     <div className="w-full h-full">
       <ResponsiveContainer width="100%" height="100%">
         <Treemap
-          data={treemapData}
+          data={treemapItems}
           dataKey="size"
           aspectRatio={4 / 3}
           stroke="#fff"
-          content={
-            <CustomContent
-              markedPaths={markedPaths}
-              onToggleMark={onToggleMark}
-              onDrillDown={onDrillDown}
-            />
-          }
+          fill="#8884d8"
           animationDuration={400}
         >
           <Tooltip content={<CustomTooltip />} />

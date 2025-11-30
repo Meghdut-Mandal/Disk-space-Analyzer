@@ -4,11 +4,27 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="17ee84e7-d610-412d-9dd9-76a828c6583a" name="Changes" comment="" />
+    <list default="true" id="17ee84e7-d610-412d-9dd9-76a828c6583a" name="Changes" comment="first commit">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bun.lock" beforeDir="false" afterPath="$PROJECT_DIR$/bun.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/main/main.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/preload/preload.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/main.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/main.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/utils/deleter.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/utils/deleter.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/utils/scanner.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/utils/scanner.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/utils/storage.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/utils/storage.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/renderer/App.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/renderer/App.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/renderer/components/Breadcrumbs.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/renderer/components/Breadcrumbs.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/renderer/components/TreemapView.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/renderer/components/TreemapView.tsx" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 4
@@ -27,6 +43,7 @@
     &quot;RunOnceActivity.zencoder-patch-migrate-custom-instruction&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.zencoder-patch-migrate-repo-info-to-rules&quot;: &quot;true&quot;,
     &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
     &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
     &quot;last_opened_file_path&quot;: &quot;/Users/megh/projects/size-manager&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
@@ -97,12 +114,25 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1764476902380</updated>
-      <workItem from="1764476903432" duration="3242000" />
+      <workItem from="1764476903432" duration="6012000" />
     </task>
+    <task id="LOCAL-00001" summary="first commit">
+      <option name="closed" value="true" />
+      <created>1764480254272</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1764480254272</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="first commit" />
+    <option name="LAST_COMMIT_MESSAGE" value="first commit" />
   </component>
   <component name="ai.zencoder.plugin.mcp">
     <option name="internalToolsState" value="{&quot;file_search&quot;:true,&quot;list_resources&quot;:true,&quot;fulltext_search&quot;:true,&quot;read_resource&quot;:true}" />

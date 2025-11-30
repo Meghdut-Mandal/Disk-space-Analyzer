@@ -13,12 +13,21 @@ async function initStore() {
 }
 
 export async function getMarkedPaths(): Promise<string[]> {
-  const s = await initStore()
-  return s.get('markedPaths', [])
+  try {
+    const s = await initStore()
+    return s.get('markedPaths', [])
+  } catch (error) {
+    console.error('Error getting marked paths:', error)
+    return []
+  }
 }
 
 export async function saveMarkedPaths(paths: string[]): Promise<void> {
-  const s = await initStore()
-  s.set('markedPaths', paths)
+  try {
+    const s = await initStore()
+    s.set('markedPaths', paths)
+  } catch (error) {
+    console.error('Error saving marked paths:', error)
+  }
 }
 
