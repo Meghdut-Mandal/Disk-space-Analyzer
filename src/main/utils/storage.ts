@@ -1,33 +1,32 @@
-let store: any
+import { app } from 'electron'
+import { join } from 'path'
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs'
 
-async function initStore() {
-  if (!store) {
-    const Store = (await import('electron-store')).default
-    store = new Store<{ markedPaths: string[] }>({
-      defaults: {
-        markedPaths: [],
-      },
-    })
-  }
-  return store
+const STORAGE_DIR = join(app.getPath('userData'), 'storage')
+const MARKED_PATHS_FILE = join(STORAGE_DIR, 'marked-paths.json')
+
+// Ensure storage directory exists
+if (!existsSync(STORAGE_DIR)) {
+    mkdirSync(STORAGE_DIR, { recursive: true })
 }
 
-export async function getMarkedPaths(): Promise<string[]> {
-  try {
-    const s = await initStore()
-    return s.get('markedPaths', [])
-  } catch (error) {
-    console.error('Error getting marked paths:', error)
-    return []
-  }
+export function getMarkedPaths(): string[] {
+    try {
+        if (!existsSync(MARKED_PATHS_FILE)) {
+            return []
+        }
+        const data = readFileSync(MARKED_PATHS_FILE, 'utf-8')
+        return JSON.parse(data)
+    } catch (error) {
+        console.error('Error reading marked paths:', error)
+        return []
+    }
 }
 
-export async function saveMarkedPaths(paths: string[]): Promise<void> {
-  try {
-    const s = await initStore()
-    s.set('markedPaths', paths)
-  } catch (error) {
-    console.error('Error saving marked paths:', error)
-  }
+export function saveMarkedPaths(paths: string[]): void {
+    try {
+        writeFileSync(MARKED_PATHS_FILE, JSON.stringify(paths, null, 2), 'utf-8')
+    } catch (error) {
+        console.error('Error saving marked paths:', error)
+    }
 }
-

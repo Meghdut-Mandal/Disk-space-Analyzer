@@ -16,5 +16,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.invoke('export-marked-list', data, format),
   getMarkedPaths: () => ipcRenderer.invoke('get-marked-paths'),
   saveMarkedPaths: (paths: string[]) => ipcRenderer.invoke('save-marked-paths', paths),
+  getRecentDirectories: () => ipcRenderer.invoke('get-recent-directories'),
+  logAction: (type: string, path?: string, metadata?: any) => ipcRenderer.invoke('log-action', type, path, metadata),
 })
 

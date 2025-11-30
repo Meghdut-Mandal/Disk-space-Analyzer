@@ -2,9 +2,10 @@ import { useEffect, useState } from 'react'
 import FolderPicker from './components/FolderPicker'
 import TreemapView from './components/TreemapView'
 import ControlPanel from './components/ControlPanel'
-import MarkedList from './components/MarkedList'
+import FileActionsPanel from './components/FileActionsPanel'
 import DeleteConfirmation from './components/DeleteConfirmation'
 import Breadcrumbs from './components/Breadcrumbs'
+import RecentDirectories from './components/RecentDirectories'
 import { useAppStore } from './store/useAppStore'
 
 function App() {
@@ -18,7 +19,8 @@ function App() {
     setMarkedPaths,
     scanDirectory,
     setShowDeleteConfirm,
-    exportMarked
+    exportMarked,
+    loadRecentDirectories
   } = useAppStore()
 
   // Load marked paths from storage on mount
@@ -32,7 +34,10 @@ function App() {
       }
     }
     loadMarkedPaths()
-  }, [setMarkedPaths])
+
+    // Load recent directories
+    loadRecentDirectories()
+  }, [setMarkedPaths, loadRecentDirectories])
 
   // Save marked paths to storage whenever they change (but not on initial mount)
   const [isInitialLoad, setIsInitialLoad] = useState(true)
@@ -92,23 +97,6 @@ function App() {
               </button>
             )}
           </div>
-          <div className="flex gap-2">
-
-            <button
-              onClick={exportMarked}
-              disabled={markedPaths.size === 0}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors shadow-sm"
-            >
-              Export Marked
-            </button>
-            <button
-              onClick={() => setShowDeleteConfirm(true)}
-              disabled={markedPaths.size === 0}
-              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors shadow-sm"
-            >
-              Delete All Marked ({markedPaths.size})
-            </button>
-          </div>
         </div>
         <ControlPanel />
         {selectedPath && viewPath && (
@@ -129,14 +117,20 @@ function App() {
               <TreemapView />
             </div>
           ) : (
-            <div className="flex items-center justify-center flex-1 text-gray-400">
-              Select a folder to begin analyzing
+            <div className="flex items-center justify-center flex-1">
+              <div className="max-w-2xl w-full">
+                <div className="text-center mb-8">
+                  <h2 className="text-2xl font-bold text-gray-700 mb-2">Welcome to Size Manager</h2>
+                  <p className="text-gray-500">Select a folder to analyze disk usage</p>
+                </div>
+                <RecentDirectories />
+              </div>
             </div>
           )}
         </div>
 
         <div className="w-80 bg-white border-l border-gray-200 overflow-auto shadow-lg z-20">
-          <MarkedList />
+          <FileActionsPanel />
         </div>
       </div>
 

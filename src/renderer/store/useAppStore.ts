@@ -12,6 +12,8 @@ interface AppState {
     maxDepth: number
     isLoading: boolean
     showDeleteConfirm: boolean
+    selectedFile: string | null
+    recentDirectories: Array<{ path: string; name: string; size: number; lastScanned: Date; scanCount: number }>
 
     // Actions
     setDirectoryData: (data: DirectoryNode | null) => void
@@ -24,11 +26,14 @@ interface AppState {
     setMaxDepth: (depth: number) => void
     setIsLoading: (loading: boolean) => void
     setShowDeleteConfirm: (show: boolean) => void
+    setSelectedFile: (path: string | null) => void
+    setRecentDirectories: (dirs: Array<{ path: string; name: string; size: number; lastScanned: Date; scanCount: number }>) => void
 
     // Async Actions (Thunks equivalent)
     scanDirectory: (path: string) => Promise<void>
     deleteMarked: () => Promise<void>
     exportMarked: () => Promise<void>
+    loadRecentDirectories: () => Promise<void>
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -42,6 +47,8 @@ export const useAppStore = create<AppState>((set, get) => ({
     maxDepth: 10,
     isLoading: false,
     showDeleteConfirm: false,
+    selectedFile: null,
+    recentDirectories: [],
 
     // Actions
     setDirectoryData: (data) => set({ directoryData: data }),
@@ -64,6 +71,8 @@ export const useAppStore = create<AppState>((set, get) => ({
     setMaxDepth: (depth) => set({ maxDepth: depth }),
     setIsLoading: (loading) => set({ isLoading: loading }),
     setShowDeleteConfirm: (show) => set({ showDeleteConfirm: show }),
+    setSelectedFile: (path) => set({ selectedFile: path }),
+    setRecentDirectories: (dirs) => set({ recentDirectories: dirs }),
 
     // Async Actions
     scanDirectory: async (path) => {
@@ -77,6 +86,8 @@ export const useAppStore = create<AppState>((set, get) => ({
                 viewPath: path, // Reset view to root on new scan
                 isLoading: false
             })
+            // Reload recent directories after scan
+            await get().loadRecentDirectories()
         } catch (error) {
             console.error('Error scanning directory:', error)
             set({ isLoading: false })
@@ -147,6 +158,20 @@ export const useAppStore = create<AppState>((set, get) => ({
         } catch (error) {
             console.error('Error exporting:', error)
             alert('Failed to export list')
+        }
+    },
+
+    loadRecentDirectories: async () => {
+        try {
+            const dirs = await window.electronAPI.getRecentDirectories()
+            // Convert lastScanned from ISO string to Date object
+            const dirsWithDates = dirs.map(dir => ({
+                ...dir,
+                lastScanned: new Date(dir.lastScanned)
+            }))
+            set({ recentDirectories: dirsWithDates })
+        } catch (error) {
+            console.error('Error loading recent directories:', error)
         }
     }
 }))

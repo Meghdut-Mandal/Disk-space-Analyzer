@@ -5,6 +5,7 @@ import { scanDirectory } from './utils/scanner'
 import { deleteDirectories } from './utils/deleter'
 import { exportMarkedList } from './utils/exporter'
 import { getMarkedPaths, saveMarkedPaths } from './utils/storage'
+import { getRecentDirectories, addDirectoryHistory, logAction } from './db/services'
 
 let mainWindow: BrowserWindow | null = null
 
@@ -71,11 +72,32 @@ ipcMain.handle('scan-directory', async (_, path: string, options: any = {}) => {
   if (!existsSync(path)) {
     throw new Error('Directory does not exist')
   }
-  return await scanDirectory(path, options)
+  const result = await scanDirectory(path, options)
+
+  // Save to database
+  try {
+    const pathParts = path.split(/[/\\]/)
+    const name = pathParts[pathParts.length - 1] || path
+    await addDirectoryHistory(path, name, result.size)
+    await logAction('scan', path)
+  } catch (error) {
+    console.error('Error saving scan to database:', error)
+  }
+
+  return result
 })
 
 ipcMain.handle('delete-directories', async (_, paths: string[]) => {
-  return await deleteDirectories(paths)
+  const result = await deleteDirectories(paths)
+
+  // Log delete action
+  try {
+    await logAction('delete', undefined, { paths, count: paths.length })
+  } catch (error) {
+    console.error('Error logging delete action:', error)
+  }
+
+  return result
 })
 
 ipcMain.handle('export-marked-list', async (_, data: Array<{ path: string; size: number }>, format: 'json' | 'csv') => {
@@ -94,7 +116,16 @@ ipcMain.handle('export-marked-list', async (_, data: Array<{ path: string; size:
     return null
   }
 
-  return await exportMarkedList(result.filePath, data, format)
+  const exportResult = await exportMarkedList(result.filePath, data, format)
+
+  // Log export action
+  try {
+    await logAction('export', result.filePath, { format, count: data.length })
+  } catch (error) {
+    console.error('Error logging export action:', error)
+  }
+
+  return exportResult
 })
 
 ipcMain.handle('get-marked-paths', async () => {
@@ -103,5 +134,22 @@ ipcMain.handle('get-marked-paths', async () => {
 
 ipcMain.handle('save-marked-paths', async (_, paths: string[]) => {
   saveMarkedPaths(paths)
+})
+
+ipcMain.handle('get-recent-directories', async () => {
+  try {
+    return await getRecentDirectories(10)
+  } catch (error) {
+    console.error('Error getting recent directories:', error)
+    return []
+  }
+})
+
+ipcMain.handle('log-action', async (_, type: string, path?: string, metadata?: any) => {
+  try {
+    await logAction(type as any, path, metadata)
+  } catch (error) {
+    console.error('Error logging action:', error)
+  }
 })
 

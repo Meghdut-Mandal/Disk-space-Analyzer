@@ -12,6 +12,8 @@ export interface ElectronAPI {
   ) => Promise<void | null>
   getMarkedPaths: () => Promise<string[]>
   saveMarkedPaths: (paths: string[]) => Promise<void>
+  getRecentDirectories: () => Promise<Array<{ path: string; name: string; size: number; lastScanned: string; scanCount: number }>>
+  logAction: (type: string, path?: string, metadata?: any) => Promise<void>
 }
 
 declare global {

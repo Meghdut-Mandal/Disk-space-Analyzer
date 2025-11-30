@@ -4,22 +4,28 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="17ee84e7-d610-412d-9dd9-76a828c6583a" name="Changes" comment="Fixes to improve performance">
+    <list default="true" id="17ee84e7-d610-412d-9dd9-76a828c6583a" name="Changes" comment="Updated the state management">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/utils/scanner.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/utils/scanner.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/main.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/main.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/utils/storage.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/preload/preload.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/preload/preload.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/renderer/App.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/renderer/App.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/renderer/components/Breadcrumbs.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/renderer/components/Breadcrumbs.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/renderer/components/ControlPanel.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/renderer/components/ControlPanel.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/renderer/components/DeleteConfirmation.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/renderer/components/DeleteConfirmation.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/renderer/components/FolderPicker.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/renderer/components/FolderPicker.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/renderer/components/MarkedList.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/renderer/components/MarkedList.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/renderer/components/MarkedList.tsx" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/src/renderer/components/TreemapView.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/renderer/components/TreemapView.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/renderer/electron.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/renderer/electron.d.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/renderer/store/useAppStore.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/renderer/store/useAppStore.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ChangesViewManager">
+    <option name="groupingKeys">
+      <option value="directory" />
+      <option value="repository" />
+    </option>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -124,7 +130,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1764476902380</updated>
-      <workItem from="1764476903432" duration="9862000" />
+      <workItem from="1764476903432" duration="12794000" />
     </task>
     <task id="LOCAL-00001" summary="first commit">
       <option name="closed" value="true" />
@@ -166,7 +172,15 @@
       <option name="project" value="LOCAL" />
       <updated>1764490191923</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="Updated the state management">
+      <option name="closed" value="true" />
+      <created>1764491095590</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1764491095590</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -178,7 +192,8 @@
     <MESSAGE value="Fixed errors" />
     <MESSAGE value="Added support for git scanning" />
     <MESSAGE value="Fixes to improve performance" />
-    <option name="LAST_COMMIT_MESSAGE" value="Fixes to improve performance" />
+    <MESSAGE value="Updated the state management" />
+    <option name="LAST_COMMIT_MESSAGE" value="Updated the state management" />
   </component>
   <component name="ai.zencoder.plugin.mcp">
     <option name="internalToolsState" value="{&quot;file_search&quot;:true,&quot;list_resources&quot;:true,&quot;fulltext_search&quot;:true,&quot;read_resource&quot;:true}" />

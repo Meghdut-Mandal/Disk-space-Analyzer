@@ -94,11 +94,16 @@ const CustomContent = (props: any) => {
         opacity={0.9}
         onClick={(e) => {
           e.stopPropagation()
+          // Always set as selected file
+          if (props.onSelectFile) {
+            props.onSelectFile(path)
+          }
+          // Only drill down if it's a directory
           if (isDirectory) {
             onDrillDown(path)
           }
         }}
-        style={{ cursor: isDirectory ? 'pointer' : 'default' }}
+        style={{ cursor: 'pointer' }}
         className="transition-opacity hover:opacity-100"
       />
 
@@ -176,7 +181,8 @@ export default function TreemapView() {
     toggleMark,
     setViewPath,
     searchQuery,
-    sizeFilter
+    sizeFilter,
+    setSelectedFile
   } = useAppStore()
 
   // Find the node corresponding to the current viewPath
@@ -234,6 +240,7 @@ export default function TreemapView() {
       markedPaths,
       onToggleMark: toggleMark,
       onDrillDown: setViewPath,
+      onSelectFile: setSelectedFile,
     })
   }
 
