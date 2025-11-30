@@ -4,10 +4,10 @@ import FolderPicker from './components/FolderPicker'
 import TreemapView from './components/TreemapView'
 import ControlPanel from './components/ControlPanel'
 import FileActionsPanel from './components/FileActionsPanel'
-import DeleteConfirmation from './components/DeleteConfirmation'
 import Breadcrumbs from './components/Breadcrumbs'
 import RecentDirectories from './components/RecentDirectories'
 import StatsView from './components/StatsView'
+import DeletePage from './components/DeletePage'
 import { useAppStore } from './store/useAppStore'
 
 function App() {
@@ -17,7 +17,6 @@ function App() {
     viewPath,
     markedPaths,
     scanStatus,
-    showDeleteConfirm,
     setMarkedPaths,
     scanDirectory,
     loadRecentDirectories,
@@ -155,7 +154,9 @@ function App() {
             </div>
           ) : directoryData ? (
             <div className="flex-1 min-h-0">
-              {activeView === 'treemap' ? <TreemapView /> : <StatsView />}
+              {activeView === 'treemap' && <TreemapView />}
+              {activeView === 'stats' && <StatsView />}
+              {activeView === 'delete' && <DeletePage />}
             </div>
           ) : (
             <div className="flex items-center justify-center flex-1">
@@ -174,12 +175,6 @@ function App() {
           <FileActionsPanel />
         </div>
       </div>
-
-      {
-        showDeleteConfirm && (
-          <DeleteConfirmation />
-        )
-      }
     </div >
   )
 }

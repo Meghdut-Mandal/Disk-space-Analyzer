@@ -12,7 +12,7 @@ export default function FileActionsPanel() {
         directoryData,
         toggleMark,
         exportMarked,
-        setShowDeleteConfirm,
+        setActiveView,
         recentDirectories
     } = useAppStore()
 
@@ -117,12 +117,12 @@ export default function FileActionsPanel() {
                                     Export Marked
                                 </button>
                                 <button
-                                    onClick={() => setShowDeleteConfirm(true)}
+                                    onClick={() => setActiveView('delete')}
                                     disabled={markedPaths.size === 0}
                                     className="w-full px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors font-medium flex items-center justify-center gap-2"
                                 >
                                     <Trash2 className="w-5 h-5" />
-                                    Delete Marked ({markedPaths.size})
+                                    Review & Delete ({markedPaths.size})
                                 </button>
                             </div>
                         )}
@@ -166,13 +166,6 @@ export default function FileActionsPanel() {
                                     <Download className="w-4 h-4" />
                                     Export List
                                 </button>
-                                <button
-                                    onClick={() => setShowDeleteConfirm(true)}
-                                    className="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium text-sm flex items-center justify-center gap-2"
-                                >
-                                    <Trash2 className="w-4 h-4" />
-                                    Delete All ({markedDirectories.length})
-                                </button>
                             </div>
                         </div>
 
@@ -201,6 +194,19 @@ export default function FileActionsPanel() {
                     </div>
                 )}
             </div>
+
+            {/* Persistent Footer Action */}
+            {markedDirectories.length > 0 && (
+                <div className="p-4 border-t border-gray-200 bg-gray-50">
+                    <button
+                        onClick={() => setActiveView('delete')}
+                        className="w-full px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 shadow-sm transition-all font-bold text-sm flex items-center justify-center gap-2"
+                    >
+                        <Trash2 className="w-5 h-5" />
+                        Review & Delete ({markedDirectories.length})
+                    </button>
+                </div>
+            )}
         </div>
     )
 }

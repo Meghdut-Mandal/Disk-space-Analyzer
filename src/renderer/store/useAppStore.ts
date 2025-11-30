@@ -11,10 +11,9 @@ interface AppState {
     sizeFilter: number
     maxDepth: number
     scanStatus: 'idle' | 'scanning' | 'processing'
-    showDeleteConfirm: boolean
     selectedFile: string | null
     recentDirectories: Array<{ path: string; name: string; size: number; lastScanned: Date; scanCount: number }>
-    activeView: 'treemap' | 'stats'
+    activeView: 'treemap' | 'stats' | 'delete'
 
     // Actions
     setDirectoryData: (data: DirectoryNode | null) => void
@@ -26,10 +25,9 @@ interface AppState {
     setSizeFilter: (size: number) => void
     setMaxDepth: (depth: number) => void
     setScanStatus: (status: 'idle' | 'scanning' | 'processing') => void
-    setShowDeleteConfirm: (show: boolean) => void
     setSelectedFile: (path: string | null) => void
     setRecentDirectories: (dirs: Array<{ path: string; name: string; size: number; lastScanned: Date; scanCount: number }>) => void
-    setActiveView: (view: 'treemap' | 'stats') => void
+    setActiveView: (view: 'treemap' | 'stats' | 'delete') => void
 
     // Async Actions (Thunks equivalent)
     scanDirectory: (path: string) => Promise<void>
@@ -91,7 +89,6 @@ export const useAppStore = create<AppState>((set, get) => ({
     sizeFilter: 50 * 1024 * 1024,
     maxDepth: 10,
     scanStatus: 'idle',
-    showDeleteConfirm: false,
     selectedFile: null,
     recentDirectories: [],
     activeView: 'treemap',
@@ -116,7 +113,6 @@ export const useAppStore = create<AppState>((set, get) => ({
     setSizeFilter: (size) => set({ sizeFilter: size }),
     setMaxDepth: (depth) => set({ maxDepth: depth }),
     setScanStatus: (status) => set({ scanStatus: status }),
-    setShowDeleteConfirm: (show) => set({ showDeleteConfirm: show }),
     setSelectedFile: (path) => set({ selectedFile: path }),
     setRecentDirectories: (dirs) => set({ recentDirectories: dirs }),
     setActiveView: (view) => set({ activeView: view }),
@@ -179,7 +175,7 @@ export const useAppStore = create<AppState>((set, get) => ({
                 paths.filter(p => !result.failed.some(f => f.path === p))
             )
 
-            set({ showDeleteConfirm: false, markedPaths: new Set() })
+            set({ activeView: 'treemap', markedPaths: new Set() })
 
             // Update directory data in memory instead of rescanning
             if (directoryData && successfullyDeleted.size > 0) {
@@ -198,7 +194,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         } catch (error) {
             console.error('Error deleting directories:', error)
             alert('Failed to delete directories')
-            set({ showDeleteConfirm: false })
+            set({ activeView: 'treemap' })
         }
     },
 

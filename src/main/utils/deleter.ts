@@ -21,7 +21,7 @@ export async function deleteDirectories(paths: string[]): Promise<{ success: str
   ]
 
   // Dynamic import for ESM module
-  const { default: trash } = await import('trash')
+  const { shell } = require('electron')
 
   for (const path of paths) {
     if (!existsSync(path)) {
@@ -34,8 +34,8 @@ export async function deleteDirectories(paths: string[]): Promise<{ success: str
       // Normalize paths for comparison
       const normalizedPath = path.replace(/\\/g, '/')
       const normalizedProtected = protectedPath.replace(/\\/g, '/')
-      return normalizedPath === normalizedProtected || 
-             normalizedPath.startsWith(normalizedProtected + '/')
+      return normalizedPath === normalizedProtected ||
+        normalizedPath.startsWith(normalizedProtected + '/')
     })
 
     if (isProtected) {
@@ -44,8 +44,8 @@ export async function deleteDirectories(paths: string[]): Promise<{ success: str
     }
 
     try {
-      // Use trash instead of permanent deletion for safety
-      await trash(path)
+      // Use electron shell.trashItem instead of trash package
+      await shell.trashItem(path)
       success.push(path)
     } catch (error) {
       failed.push({
