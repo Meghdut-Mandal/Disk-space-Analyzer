@@ -231,3 +231,5 @@ export async function scanDirectory(rootPath: string, options: ScanOptions = {})
   return await scanRecursive(rootPath, rootName, 0)
 }
 
+export { scanDirectoryFast } from './fastScanner'
+

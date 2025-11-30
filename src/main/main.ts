@@ -72,7 +72,19 @@ ipcMain.handle('scan-directory', async (_, path: string, options: any = {}) => {
   if (!existsSync(path)) {
     throw new Error('Directory does not exist')
   }
-  const result = await scanDirectory(path, options)
+  // Try fast scan on non-Windows platforms
+  let result
+  if (process.platform !== 'win32') {
+    try {
+      const { scanDirectoryFast } = await import('./utils/fastScanner')
+      result = await scanDirectoryFast(path)
+    } catch (error) {
+      console.warn('Fast scan failed, falling back to standard scan:', error)
+      result = await scanDirectory(path, options)
+    }
+  } else {
+    result = await scanDirectory(path, options)
+  }
 
   // Save to database
   try {
