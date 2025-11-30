@@ -16,6 +16,7 @@ interface TreemapItemProps {
   maxSize: number
   isMarked: boolean
   hasChildren: boolean
+  zoom: number
   onToggleMark: (path: string, e: React.MouseEvent) => void
   onDrillDown: (path: string) => void
   onSelectFile: (path: string) => void
@@ -66,18 +67,19 @@ const TreemapItem = ({
   maxSize,
   isMarked,
   hasChildren,
+  zoom,
   onToggleMark,
   onDrillDown,
   onSelectFile,
 }: TreemapItemProps) => {
+  // Skip rendering very small items - MUST be before any hooks
+  if (width < 2 || height < 2) return null
+
   const [hovered, setHovered] = useState(false)
   const [tooltipPosition, setTooltipPosition] = useState<'top' | 'bottom' | 'left' | 'right'>('top')
   const itemRef = useRef<HTMLDivElement>(null)
   const [showName, setShowName] = useState(false)
   const [showSize, setShowSize] = useState(false)
-
-  // Skip rendering very small items
-  if (width < 2 || height < 2) return null
 
   const color = isMarked ? '#ef4444' : getColorBySize(size, maxSize)
 
@@ -94,6 +96,7 @@ const TreemapItem = ({
   }
 
   // Use ResizeObserver to track actual pixel dimensions and update text visibility
+  // Also update when zoom changes
   useEffect(() => {
     if (!itemRef.current) return
 
@@ -120,7 +123,7 @@ const TreemapItem = ({
     return () => {
       resizeObserver.disconnect()
     }
-  }, [])
+  }, [zoom])
 
   // Calculate tooltip position based on item location
   useEffect(() => {
@@ -156,10 +159,10 @@ const TreemapItem = ({
       ref={itemRef}
       className="absolute cursor-pointer transition-all duration-200 group"
       style={{
-        left: `${x}%`,
-        top: `${y}%`,
-        width: `${width}%`,
-        height: `${height}%`,
+        left: `${x}px`,
+        top: `${y}px`,
+        width: `${width}px`,
+        height: `${height}px`,
       }}
       onClick={handleClick}
       onContextMenu={handleContextMenu}
@@ -236,6 +239,31 @@ const TreemapContainer = ({
   const [isDragging, setIsDragging] = useState(false)
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
   const containerRef = useRef<HTMLDivElement>(null)
+  const contentRef = useRef<HTMLDivElement>(null)
+  const [containerSize, setContainerSize] = useState({ width: 100, height: 100 })
+
+  // Track container dimensions - measure the actual content area with padding
+  useEffect(() => {
+    if (!contentRef.current) return
+
+    const updateSize = () => {
+      if (contentRef.current) {
+        const rect = contentRef.current.getBoundingClientRect()
+        setContainerSize({ width: rect.width, height: rect.height })
+      }
+    }
+
+    // Initial size
+    updateSize()
+
+    // Watch for size changes
+    const resizeObserver = new ResizeObserver(updateSize)
+    resizeObserver.observe(contentRef.current)
+
+    return () => {
+      resizeObserver.disconnect()
+    }
+  }, [])
 
   // Compute Layout
   const { items, maxSize } = useMemo(() => {
@@ -246,8 +274,11 @@ const TreemapContainer = ({
       .sum((d) => d.size)
       .sort((a, b) => (b.value || 0) - (a.value || 0))
 
+    console.log('[TREEMAP] Computing layout with dimensions:', containerSize)
+    
+    // Use container aspect ratio for treemap
     const treemap = d3.treemap<DirectoryNode>()
-      .size([100, 100])
+      .size([containerSize.width, containerSize.height])
       .paddingInner(0.15) // Reduced padding for better space utilization
       .paddingOuter(0.3)  // Reduced outer padding
       .round(false)
@@ -260,7 +291,7 @@ const TreemapContainer = ({
     const max = Math.max(...children.map(item => item.value || 0))
     
     return { items: children, maxSize: max }
-  }, [data])
+  }, [data, containerSize])
 
   // Handle zoom with mouse wheel - using useEffect to add non-passive listener
   useEffect(() => {
@@ -362,7 +393,7 @@ const TreemapContainer = ({
             transition: isDragging ? 'none' : 'transform 0.1s ease-out',
           }}
         >
-          <div className="relative w-full h-full">
+          <div ref={contentRef} className="relative w-full h-full">
             {items.map((node) => {
               // d3 layout gives x0, y0, x1, y1 as percentages
               const x = node.x0
@@ -383,6 +414,7 @@ const TreemapContainer = ({
                   maxSize={maxSize}
                   isMarked={markedPaths.has(node.data.path)}
                   hasChildren={!!node.children && node.children.length > 0}
+                  zoom={zoom}
                   onToggleMark={onToggleMark}
                   onDrillDown={onDrillDown}
                   onSelectFile={onSelectFile}
