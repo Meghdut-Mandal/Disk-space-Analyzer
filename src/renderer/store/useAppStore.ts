@@ -10,7 +10,7 @@ interface AppState {
     searchQuery: string
     sizeFilter: number
     maxDepth: number
-    isLoading: boolean
+    scanStatus: 'idle' | 'scanning' | 'processing'
     showDeleteConfirm: boolean
     selectedFile: string | null
     recentDirectories: Array<{ path: string; name: string; size: number; lastScanned: Date; scanCount: number }>
@@ -25,7 +25,7 @@ interface AppState {
     setSearchQuery: (query: string) => void
     setSizeFilter: (size: number) => void
     setMaxDepth: (depth: number) => void
-    setIsLoading: (loading: boolean) => void
+    setScanStatus: (status: 'idle' | 'scanning' | 'processing') => void
     setShowDeleteConfirm: (show: boolean) => void
     setSelectedFile: (path: string | null) => void
     setRecentDirectories: (dirs: Array<{ path: string; name: string; size: number; lastScanned: Date; scanCount: number }>) => void
@@ -90,7 +90,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     searchQuery: '',
     sizeFilter: 50 * 1024 * 1024,
     maxDepth: 10,
-    isLoading: false,
+    scanStatus: 'idle',
     showDeleteConfirm: false,
     selectedFile: null,
     recentDirectories: [],
@@ -115,7 +115,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     setSearchQuery: (query) => set({ searchQuery: query }),
     setSizeFilter: (size) => set({ sizeFilter: size }),
     setMaxDepth: (depth) => set({ maxDepth: depth }),
-    setIsLoading: (loading) => set({ isLoading: loading }),
+    setScanStatus: (status) => set({ scanStatus: status }),
     setShowDeleteConfirm: (show) => set({ showDeleteConfirm: show }),
     setSelectedFile: (path) => set({ selectedFile: path }),
     setRecentDirectories: (dirs) => set({ recentDirectories: dirs }),
@@ -127,19 +127,23 @@ export const useAppStore = create<AppState>((set, get) => ({
         console.log(`[FRONTEND] Starting scan request for: ${path}`)
 
         const { maxDepth, sizeFilter } = get()
-        set({ isLoading: true })
+        set({ scanStatus: 'scanning' })
         try {
             const ipcStartTime = Date.now()
             const data = await window.electronAPI.scanDirectory(path, { maxDepth, minSize: sizeFilter })
             console.log(`[FRONTEND] Received scan data in ${Date.now() - ipcStartTime}ms`)
             console.log(`[FRONTEND] Data contains ${data.children?.length || 0} top-level items`)
 
+            set({ scanStatus: 'processing' })
+            // Small delay to let UI update and show processing state
+            await new Promise(resolve => setTimeout(resolve, 100))
+
             const setStateStartTime = Date.now()
             set({
                 directoryData: data,
                 selectedPath: path,
                 viewPath: path, // Reset view to root on new scan
-                isLoading: false
+                scanStatus: 'idle'
             })
             console.log(`[FRONTEND] State updated in ${Date.now() - setStateStartTime}ms`)
 
@@ -151,7 +155,7 @@ export const useAppStore = create<AppState>((set, get) => ({
             console.log(`[FRONTEND] Total frontend time: ${Date.now() - startTime}ms`)
         } catch (error) {
             console.error('Error scanning directory:', error)
-            set({ isLoading: false })
+            set({ scanStatus: 'idle' })
             throw error
         }
     },

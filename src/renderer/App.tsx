@@ -16,7 +16,7 @@ function App() {
     selectedPath,
     viewPath,
     markedPaths,
-    isLoading,
+    scanStatus,
     showDeleteConfirm,
     setMarkedPaths,
     scanDirectory,
@@ -86,7 +86,7 @@ function App() {
             {selectedPath && (
               <button
                 onClick={handleRefresh}
-                disabled={isLoading}
+                disabled={scanStatus !== 'idle'}
                 className="px-3 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors shadow-sm flex items-center gap-2"
                 title="Refresh current directory"
               >
@@ -132,9 +132,26 @@ function App() {
 
       <div className="flex flex-1 overflow-hidden">
         <div className="flex-1 p-4 bg-gray-50 flex flex-col">
-          {isLoading ? (
+          {scanStatus !== 'idle' ? (
             <div className="flex items-center justify-center flex-1">
-              <div className="text-gray-500 animate-pulse">Scanning directory...</div>
+              <div className="flex flex-col items-center gap-4 max-w-md w-full px-8">
+                <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
+                  <div
+                    className={`h-2.5 rounded-full transition-all duration-500 ${scanStatus === 'scanning'
+                      ? 'bg-blue-500 w-full animate-progress-indeterminate'
+                      : 'bg-green-500 w-full'
+                      }`}
+                  ></div>
+                </div>
+                <div className="text-gray-600 font-medium animate-pulse">
+                  {scanStatus === 'scanning' ? 'Reading nodes...' : 'Processing tree nodes...'}
+                </div>
+                <div className="text-sm text-gray-400">
+                  {scanStatus === 'scanning'
+                    ? 'Scanning file system structure'
+                    : 'Calculating sizes and building tree'}
+                </div>
+              </div>
             </div>
           ) : directoryData ? (
             <div className="flex-1 min-h-0">

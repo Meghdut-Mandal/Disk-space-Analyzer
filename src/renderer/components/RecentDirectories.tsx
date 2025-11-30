@@ -3,7 +3,7 @@ import { Folder, ChevronRight } from 'lucide-react'
 import { useAppStore } from '../store/useAppStore'
 
 export default function RecentDirectories() {
-    const { recentDirectories, scanDirectory, isLoading } = useAppStore()
+    const { recentDirectories, scanDirectory, scanStatus } = useAppStore()
 
     const handleSelectRecent = async (path: string) => {
         try {
@@ -45,7 +45,7 @@ export default function RecentDirectories() {
                 <button
                     key={dir.path}
                     onClick={() => handleSelectRecent(dir.path)}
-                    disabled={isLoading}
+                    disabled={scanStatus !== 'idle'}
                     className="w-full text-left p-4 bg-white border border-gray-200 rounded-lg hover:border-gray-400 hover:shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed group"
                 >
                     <div className="flex items-start justify-between gap-3">
