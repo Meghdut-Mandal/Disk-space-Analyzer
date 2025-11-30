@@ -300,7 +300,7 @@ const TreemapContainer = ({
         onMouseLeave={handleMouseLeave}
       >
         <div
-          className="absolute inset-0 p-4"
+          className="absolute inset-0 p-4 pt-16 pr-48 pb-24 pl-28"
           style={{
             transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
             transformOrigin: 'center center',
