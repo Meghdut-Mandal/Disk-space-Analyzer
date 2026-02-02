@@ -29,6 +29,11 @@ interface AppState {
     setRecentDirectories: (dirs: Array<{ path: string; name: string; size: number; lastScanned: Date; scanCount: number }>) => void
     setActiveView: (view: 'treemap' | 'stats' | 'delete') => void
 
+    // Regex Actions
+    markByRegex: (pattern: string, mode: 'name' | 'path') => { matched: number; error?: string }
+    unmarkByRegex: (pattern: string, mode: 'name' | 'path') => { matched: number; error?: string }
+    getMatchingPaths: (pattern: string, mode: 'name' | 'path') => { paths: string[]; error?: string }
+
     // Async Actions (Thunks equivalent)
     scanDirectory: (path: string) => Promise<void>
     deleteMarked: () => Promise<void>
@@ -116,6 +121,90 @@ export const useAppStore = create<AppState>((set, get) => ({
     setSelectedFile: (path) => set({ selectedFile: path }),
     setRecentDirectories: (dirs) => set({ recentDirectories: dirs }),
     setActiveView: (view) => set({ activeView: view }),
+
+    // Regex Actions
+    // Note: If a parent folder matches, we don't include/count children
+    getMatchingPaths: (pattern, mode) => {
+        const { directoryData } = get()
+        if (!directoryData) return { paths: [], error: 'No directory data loaded' }
+
+        try {
+            const regex = new RegExp(pattern)
+            const matchingPaths: string[] = []
+
+            const traverse = (node: DirectoryNode): void => {
+                const testValue = mode === 'name' ? node.name : node.path
+                if (regex.test(testValue)) {
+                    matchingPaths.push(node.path)
+                    // Don't traverse children if parent matches
+                    return
+                }
+                node.children.forEach(traverse)
+            }
+            traverse(directoryData)
+
+            return { paths: matchingPaths }
+        } catch (e) {
+            return { paths: [], error: `Invalid regex: ${(e as Error).message}` }
+        }
+    },
+
+    markByRegex: (pattern, mode) => {
+        const { directoryData, markedPaths } = get()
+        if (!directoryData) return { matched: 0, error: 'No directory data loaded' }
+
+        try {
+            const regex = new RegExp(pattern)
+            const newMarked = new Set(markedPaths)
+            let matchCount = 0
+
+            const traverse = (node: DirectoryNode): void => {
+                const testValue = mode === 'name' ? node.name : node.path
+                if (regex.test(testValue)) {
+                    newMarked.add(node.path)
+                    matchCount++
+                    // Don't traverse children if parent matches
+                    return
+                }
+                node.children.forEach(traverse)
+            }
+            traverse(directoryData)
+
+            set({ markedPaths: newMarked })
+            return { matched: matchCount }
+        } catch (e) {
+            return { matched: 0, error: `Invalid regex: ${(e as Error).message}` }
+        }
+    },
+
+    unmarkByRegex: (pattern, mode) => {
+        const { directoryData, markedPaths } = get()
+        if (!directoryData) return { matched: 0, error: 'No directory data loaded' }
+
+        try {
+            const regex = new RegExp(pattern)
+            const newMarked = new Set(markedPaths)
+            let matchCount = 0
+
+            const traverse = (node: DirectoryNode): void => {
+                const testValue = mode === 'name' ? node.name : node.path
+                if (regex.test(testValue) && newMarked.has(node.path)) {
+                    newMarked.delete(node.path)
+                    matchCount++
+                    // Don't traverse children if parent matches
+                    return
+                }
+                node.children.forEach(traverse)
+            }
+            traverse(directoryData)
+
+            set({ markedPaths: newMarked })
+            return { matched: matchCount }
+        } catch (e) {
+            return { matched: 0, error: `Invalid regex: ${(e as Error).message}` }
+        }
+    },
+
 
     // Async Actions
     scanDirectory: async (path) => {

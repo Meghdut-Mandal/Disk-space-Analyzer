@@ -1,9 +1,11 @@
 {
   "lockfileVersion": 1,
+  "configVersion": 0,
   "workspaces": {
     "": {
       "name": "size-manager",
       "dependencies": {
+        "@electron/build-tools": "^2.1.5",
         "@react-three/drei": "9",
         "@react-three/fiber": "8",
         "bytes": "^3.1.2",
@@ -83,6 +85,8 @@
     "@babel/types": ["@babel/types@7.28.5", "https://registry.npmmirror.com/@babel/types/-/types-7.28.5.tgz", { "dependencies": { "@babel/helper-string-parser": "^7.27.1", "@babel/helper-validator-identifier": "^7.28.5" } }, "sha512-qQ5m48eI/MFLQ5PxQj4PFaprjyCTLI37ElWMmNs0K8Lk3dVeOdNpB3ks8jc7yM5CDmVC73eMVk/trk3fgmrUpA=="],
 
     "@dimforge/rapier3d-compat": ["@dimforge/rapier3d-compat@0.12.0", "https://registry.npmmirror.com/@dimforge/rapier3d-compat/-/rapier3d-compat-0.12.0.tgz", {}, "sha512-uekIGetywIgopfD97oDL5PfeezkFpNhwlzlaEYNOA0N6ghdsOvh/HYjSMek5Q2O1PYvRSDFcqFVJl4r4ZBwOow=="],
+
+    "@electron/build-tools": ["@electron/build-tools@2.1.5", "https://registry.npmmirror.com/@electron/build-tools/-/build-tools-2.1.5.tgz", { "bin": { "e": "run.js", "electron-build-tools": "run.js" } }, "sha512-QrP58QGEVaqIErP5KUUt+MXYr4KqDTwnd3tU5FdkIxNyNKevzwKVEMuTxzm3My5Vaqs9I6kZdaoLH2QOPk3YXg=="],
 
     "@electron/get": ["@electron/get@2.0.3", "https://registry.npmmirror.com/@electron/get/-/get-2.0.3.tgz", { "dependencies": { "debug": "^4.1.1", "env-paths": "^2.2.0", "fs-extra": "^8.1.0", "got": "^11.8.5", "progress": "^2.0.3", "semver": "^6.2.0", "sumchecker": "^3.0.1" }, "optionalDependencies": { "global-agent": "^3.0.0" } }, "sha512-Qkzpg2s9GnVV2I2BjRksUi43U5e6+zaQMcjoJy0C+C5oxaKl+fmckGDQFtRpZpZV0NQekuZZ+tGz7EA9TVnQtQ=="],
 

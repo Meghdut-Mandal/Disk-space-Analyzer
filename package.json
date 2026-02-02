@@ -32,6 +32,7 @@
     "vite": "^5.0.8"
   },
   "dependencies": {
+    "@electron/build-tools": "^2.1.5",
     "@react-three/drei": "9",
     "@react-three/fiber": "8",
     "bytes": "^3.1.2",
